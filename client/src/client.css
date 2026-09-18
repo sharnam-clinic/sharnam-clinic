@@ -1,0 +1,90 @@
+/* ==========================================================================
+   CLIENT FRONTEND WEBSITE STYLES (client.css)
+   ========================================================================== */
+
+/* Reveal animation for scroll-triggered elements */
+.reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s cubic-bezier(0.21, 1.02, 0.73, 1);
+    width: 100%;
+    min-width: 0;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Glassmorphism Navigation */
+.glass-nav {
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+/* 3D Flip Card Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.08); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+/* Touch friendly horizontal scroll styling */
+.touch-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(204, 59, 56, 0.3) transparent;
+}
+
+.touch-scroll-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.touch-scroll-x::-webkit-scrollbar-thumb {
+  background: rgba(204, 59, 56, 0.3);
+  border-radius: 9999px;
+}
+
+/* Ensure paragraph text wrap cleanly and never shrink */
+.client-layout p,
+.client-page p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}

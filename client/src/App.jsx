@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ScrollToTop from './components/ScrollToTop';
 import PublicLayout from './layouts/PublicLayout';
@@ -8,26 +8,15 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import UserList from './pages/UserList';
 import UserForm from './pages/UserForm';
-import MenuList from './pages/MenuList';
-import MenuForm from './pages/MenuForm';
 import UserTypeList from './pages/UserTypeList';
 import UserTypeForm from './pages/UserTypeForm';
 import RolePermissionForm from './pages/RolePermissionForm';
-import ExpertiesList from './pages/ExpertiesList';
-import ExpertiesForm from './pages/ExpertiesForm';
-import LanguageList from './pages/LanguageList';
-import LanguageForm from './pages/LanguageForm';
-import DoctorList from './pages/DoctorList';
-import DoctorForm from './pages/DoctorForm';
-import TreatmentTypeList from './pages/TreatmentTypeList';
-import TreatmentTypeForm from './pages/TreatmentTypeForm';
-import SpecialitiesList from './pages/SpecialitiesList';
-import SpecialitiesForm from './pages/SpecialitiesForm';
-import SubjectList from './pages/SubjectList';
-import SubjectForm from './pages/SubjectForm';
-import PatientList from './pages/PatientList';
-import InquiryList from './pages/InquiryList';
-import AppointmentList from './pages/AppointmentList';
+import ClinicPhotoList from './pages/ClinicPhotoList';
+import ClinicPhotoForm from './pages/ClinicPhotoForm';
+import ServiceList from './pages/ServiceList';
+import ServiceForm from './pages/ServiceForm';
+import HealthConditionList from './pages/HealthConditionList';
+import HealthConditionForm from './pages/HealthConditionForm';
 
 // Client pages
 import HomePage from './pages/client/HomePage';
@@ -67,49 +56,36 @@ function App() {
         {/* Admin panel */}
         <Route path="/admin" element={<ProtectedLayout />}>
           <Route index element={<AdminDashboard />} />
+          
+          {/* Dynamic Clinic Modules */}
+          <Route path="clinic-photos" element={<ClinicPhotoList />} />
+          <Route path="clinic-photos/new" element={<ClinicPhotoForm />} />
+          <Route path="clinic-photos/edit/:id" element={<ClinicPhotoForm />} />
+
+          <Route path="services" element={<ServiceList />} />
+          <Route path="services/new" element={<ServiceForm />} />
+          <Route path="services/edit/:id" element={<ServiceForm />} />
+
+          <Route path="health-conditions" element={<HealthConditionList />} />
+          <Route path="health-conditions/new" element={<HealthConditionForm />} />
+          <Route path="health-conditions/edit/:id" element={<HealthConditionForm />} />
+
+          {/* User & Access Management */}
           <Route path="users" element={<UserList />} />
           <Route path="users/new" element={<UserForm />} />
           <Route path="users/edit/:id" element={<UserForm />} />
           
-          <Route path="menus" element={<MenuList />} />
-          <Route path="menus/new" element={<MenuForm />} />
-          <Route path="menus/edit/:id" element={<MenuForm />} />
-          
           <Route path="user-types" element={<UserTypeList />} />
           <Route path="user-types/new" element={<UserTypeForm />} />
           <Route path="user-types/edit/:id" element={<UserTypeForm />} />
-          
-          <Route path="experties" element={<ExpertiesList />} />
-          <Route path="experties/new" element={<ExpertiesForm />} />
-          <Route path="experties/edit/:id" element={<ExpertiesForm />} />
-          
-          <Route path="languages" element={<LanguageList />} />
-          <Route path="languages/new" element={<LanguageForm />} />
-          <Route path="languages/edit/:id" element={<LanguageForm />} />
-          
-          <Route path="doctors" element={<DoctorList />} />
-          <Route path="doctors/new" element={<DoctorForm />} />
-          <Route path="doctors/edit/:id" element={<DoctorForm />} />
-          
-          <Route path="treatment-types" element={<TreatmentTypeList />} />
-          <Route path="treatment-types/new" element={<TreatmentTypeForm />} />
-          <Route path="treatment-types/edit/:id" element={<TreatmentTypeForm />} />
-          
-          <Route path="specialities" element={<SpecialitiesList />} />
-          <Route path="specialities/new" element={<SpecialitiesForm />} />
-          <Route path="specialities/edit/:id" element={<SpecialitiesForm />} />
-          
-          <Route path="subjects" element={<SubjectList />} />
-          <Route path="subjects/new" element={<SubjectForm />} />
-          <Route path="subjects/edit/:id" element={<SubjectForm />} />
-          
-          <Route path="patients" element={<PatientList />} />
-          <Route path="inquiries" element={<InquiryList />} />
-          <Route path="appointments" element={<AppointmentList />} />
 
+          <Route path="role-permission" element={<RolePermissionForm />} />
           <Route path="permissions" element={<RolePermissionForm />} />
           <Route path="permissions/:userTypeId" element={<RolePermissionForm />} />
         </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

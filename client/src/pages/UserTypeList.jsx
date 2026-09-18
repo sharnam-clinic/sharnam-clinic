@@ -8,7 +8,7 @@ import DataTable from '../components/DataTable';
 const UserTypeList = () => {
   const [userTypes, setUserTypes] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const { menus: layoutMenus } = useOutletContext();
   const location = useLocation();
   const currentMenu = layoutMenus.find(m => m.listPageRoute === location.pathname) || {};
@@ -36,7 +36,7 @@ const UserTypeList = () => {
       <div className="flex flex-col gap-xs">
         <p className="font-body-md m-0">Are you sure you want to delete this User Type?</p>
         <div className="flex gap-sm justify-end mt-2">
-          <button 
+          <button
             className="px-md py-xs bg-error text-on-error rounded-md text-sm font-label-md"
             onClick={async () => {
               toast.dismiss(t.id);
@@ -52,7 +52,7 @@ const UserTypeList = () => {
           >
             Delete
           </button>
-          <button 
+          <button
             className="px-md py-xs bg-[#444] rounded-md text-sm text-white font-label-md"
             onClick={() => toast.dismiss(t.id)}
           >
@@ -64,14 +64,17 @@ const UserTypeList = () => {
   };
 
   const columns = [
-    { key: 'id', label: 'ID' },
-    { key: 'userType', label: 'User Type' },
-    { 
-      key: 'isStatus', 
+    { key: 'userType', label: 'User Role / Type', sortable: true },
+    {
+      key: 'isStatus',
       label: 'Status',
-      render: (row) => (
-        <span className={`px-sm py-xs rounded-lg font-label-md ${row.isStatus === 1 ? 'bg-[#E0F2E9] text-[#1D7A46]' : 'bg-error-container text-on-error-container'}`}>
-          {row.isStatus === 1 ? 'Active' : 'Inactive'}
+      render: (status) => (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${status === 1
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-rose-50 text-rose-700 border border-rose-200'
+          }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${status === 1 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+          {status === 1 ? 'Active' : 'Inactive'}
         </span>
       )
     },
@@ -79,48 +82,52 @@ const UserTypeList = () => {
       key: 'actions',
       label: 'Actions',
       sortable: false,
-      render: (row) => (
-        <div className="flex gap-sm">
-          {permissions.isEdit === 1 && (
-            <Link to={`/admin/user-types/edit/${row.id}`} className="p-xs text-primary hover:bg-surface-container rounded transition-colors">
-              <Edit size={18} />
-            </Link>
-          )}
-          {permissions.isDelete === 1 && (
-            <button onClick={() => handleDelete(row.id)} className="p-xs text-error hover:bg-error-container rounded transition-colors">
-              <Trash2 size={18} />
-            </button>
-          )}
+      render: (_, row) => (
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/admin/user-types/edit/${row.id}`}
+            className="p-1.5 text-gray-500 hover:text-[#cc3b38] hover:bg-red-50 rounded-lg transition-colors"
+            title="Edit Role"
+          >
+            <Edit size={16} />
+          </Link>
+          <button
+            onClick={() => handleDelete(row.id)}
+            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            title="Delete Role"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       )
     }
   ];
 
   if (loading) {
-    return <div className="p-xl text-center font-body-md">Loading user types...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[300px] text-gray-400 text-sm">
+        Loading user types...
+      </div>
+    );
   }
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex justify-between items-center mb-lg">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-headline-md text-headline-md text-on-surface">Manage User Types</h2>
-          <p className="font-body-md text-on-surface-variant mt-xs">View, search, and manage system user roles.</p>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">User Roles & Types</h2>
+          <p className="text-sm text-gray-500 mt-1">Manage system user roles, access levels, and categories.</p>
         </div>
-        {permissions.isWrite === 1 && (
-          <Link 
-            to="/admin/user-types/new" 
-            className="flex items-center gap-xs bg-primary text-on-primary hover:bg-primary-container px-md py-sm rounded-lg font-label-md transition-colors shadow-sm"
-          >
-            <Plus size={20} />
-            Add User Type
-          </Link>
-        )}
+        <Link
+          to="/admin/user-types/new"
+          className="inline-flex items-center justify-center gap-2 bg-[#cc3b38] hover:bg-[#b52f2c] text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-xs transition-all shrink-0"
+        >
+          <Plus size={16} />
+          Add User Type
+        </Link>
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        <DataTable columns={columns} data={userTypes} exportFileName="LuxCare_UserTypes" />
-      </div>
+      <DataTable columns={columns} data={userTypes} exportFileName="Sharnam_UserTypes" />
     </div>
   );
 };

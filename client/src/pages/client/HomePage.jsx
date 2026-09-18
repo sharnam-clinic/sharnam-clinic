@@ -30,8 +30,8 @@ const HomePage = () => {
         <div className="absolute top-10 right-10 w-96 h-96 bg-[#fcebeb] rounded-full blur-3xl opacity-60 pointer-events-none" />
         <div className="absolute bottom-5 left-10 w-80 h-80 bg-[#e6f4f8] rounded-full blur-3xl opacity-60 pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          <div className="lg:col-span-7 space-y-5 sm:space-y-6 reveal active">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
+          <div className="col-span-12 lg:col-span-7 space-y-5 sm:space-y-6 reveal active w-full">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fcebeb] text-[#cc3b38] font-['Inter'] text-[12px] sm:text-[13px] font-bold uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-[#cc3b38] animate-pulse" />
               Welcome to Sharnam Homeopathy & Wellness Clinic
@@ -81,7 +81,7 @@ const HomePage = () => {
           </div>
 
           {/* Hero Banner Illustration / Card */}
-          <div className="lg:col-span-5 reveal active flex justify-center" style={{ transitionDelay: '150ms' }}>
+          <div className="col-span-12 lg:col-span-5 reveal active flex justify-center w-full" style={{ transitionDelay: '150ms' }}>
             <div className="relative w-full max-w-md bg-white rounded-[32px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-[#f0e6e4]">
               <div className="relative rounded-2xl overflow-hidden mb-6 aspect-4/3 bg-[#f8f4f2]">
                 <img

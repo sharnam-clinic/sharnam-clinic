@@ -35,36 +35,50 @@ const Header = ({ toggleSidebar, menus = [] }) => {
   };
 
   return (
-    <header className="h-16 bg-surface-container-lowest border-b border-[#E7E7E7] flex items-center justify-between px-md sm:px-lg z-10 sticky top-0 shadow-sm">
-      <div className="flex items-center gap-sm sm:gap-md overflow-hidden">
+    <header className="h-18 bg-white border-b border-gray-200/80 flex items-center justify-between px-4 sm:px-8 z-20 sticky top-0 shadow-xs">
+      <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
         <button 
           onClick={toggleSidebar}
-          className="lg:hidden text-on-surface-variant hover:text-primary transition-colors focus:outline-none p-1 shrink-0"
+          className="lg:hidden text-gray-500 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 shrink-0"
           aria-label="Toggle navigation drawer"
         >
-          <Menu size={24} />
+          <Menu size={20} />
         </button>
-        <h1 className="font-headline-sm text-[16px] sm:text-headline-sm font-bold text-on-surface m-0 truncate">
-          {getPageTitle()}
-        </h1>
+        <div>
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            <span>Admin</span>
+            <span>/</span>
+            <span className="text-[#cc3b38]">{getPageTitle()}</span>
+          </div>
+          <h1 className="text-base sm:text-lg font-bold text-gray-900 m-0 truncate tracking-tight">
+            {getPageTitle()}
+          </h1>
+        </div>
       </div>
 
-      <div className="flex items-center gap-sm sm:gap-lg shrink-0">
-        <div className="flex items-center gap-sm bg-surface-container px-2 sm:px-sm py-xs rounded-full">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary shrink-0">
-            <User size={15} />
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        {/* User Badge */}
+        <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200/80 px-3 py-1.5 rounded-full">
+          <div className="w-7 h-7 rounded-full bg-[#cc3b38] flex items-center justify-center text-white shrink-0 shadow-xs">
+            <User size={14} />
           </div>
-          <span className="font-label-md text-[13px] sm:text-label-md text-on-surface pr-sm hidden xs:inline">
-            {user?.email?.split('@')[0] || 'Admin'}
-          </span>
+          <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
+            <span className="text-xs font-semibold text-gray-900">
+              {user?.name || user?.email?.split('@')[0] || 'Admin'}
+            </span>
+            <span className="text-[10px] text-gray-400 font-mono">
+              {user?.email || 'admin@sharnam.com'}
+            </span>
+          </div>
         </div>
 
+        {/* Logout Button */}
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-xs font-label-md text-label-md text-error hover:text-on-error-container hover:bg-error-container p-1.5 sm:px-sm sm:py-xs rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100/80 border border-red-100 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
           title="Logout"
         >
-          <LogOut size={18} />
+          <LogOut size={14} />
           <span className="hidden sm:inline">Logout</span>
         </button>
       </div>

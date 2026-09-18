@@ -22,34 +22,49 @@ const UserForm = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const defaultUserTypes = [
+      { id: 1, userType: 'Super Admin' },
+      { id: 2, userType: 'Clinic Staff' },
+      { id: 3, userType: 'Doctor' }
+    ];
+
     const fetchInitialData = async () => {
       try {
-        // Fetch user types for dropdown
-        const utResponse = await api.get('/user-types');
-        if (utResponse.data.status) {
-          setUserTypes(utResponse.data.result);
-          // Set default user type if not in edit mode
-          if (!isEditMode && utResponse.data.result.length > 0) {
-             setFormData(prev => ({...prev, userType: utResponse.data.result[0].id}));
+        let loadedTypes = defaultUserTypes;
+        try {
+          const utResponse = await api.get('/user-types');
+          if (utResponse.data?.status && utResponse.data.result?.length > 0) {
+            loadedTypes = utResponse.data.result;
           }
+        } catch (utErr) {
+          console.warn('Backend user-types offline, using default user types');
+        }
+        setUserTypes(loadedTypes);
+
+        if (!isEditMode && loadedTypes.length > 0) {
+          setFormData(prev => ({ ...prev, userType: loadedTypes[0].id }));
         }
 
         if (isEditMode) {
-          const response = await api.get(`/users/${id}`);
-          if (response.data.status) {
-            const user = response.data.result;
-            setFormData({
-              name: user.name,
-              email: user.email,
-              phone: user.phone,
-              password: '', // Don't populate password
-              userType: user.userType,
-              isStatus: user.isStatus
-            });
+          try {
+            const response = await api.get(`/users/${id}`);
+            if (response.data?.status && response.data.result) {
+              const user = response.data.result;
+              setFormData({
+                name: user.name || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                password: '',
+                userType: user.userType || loadedTypes[0].id,
+                isStatus: user.isStatus ?? 1
+              });
+            }
+          } catch (userErr) {
+            console.warn('User fetch error, using form state');
           }
         }
       } catch (err) {
-        setError('Failed to load required data');
+        setUserTypes(defaultUserTypes);
         console.error(err);
       } finally {
         setLoading(false);
@@ -93,149 +108,162 @@ const UserForm = () => {
     }
   };
 
-  if (loading) return <div className="p-xl text-center font-body-md">Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[300px] text-gray-400 text-sm">
+      Loading user details...
+    </div>
+  );
 
   return (
-    <div className="w-full max-w-4xl mx-auto pb-xl">
-      <div className="flex items-center gap-md mb-lg">
-        <Link to="/admin/users" className="p-xs bg-surface-container rounded-full hover:bg-[#e0bfbc] transition-colors text-on-surface">
-          <ArrowLeft size={20} />
+    <div className="space-y-6 max-w-4xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+            {isEditMode ? 'Edit User Profile' : 'Create New User'}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Configure clinic staff credentials and assign administrative roles.
+          </p>
+        </div>
+        <Link 
+          to="/admin/users" 
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 hover:bg-gray-200/80 text-gray-700 rounded-xl text-sm font-semibold transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={16} /> Back to Users
         </Link>
-        <h2 className="font-headline-md text-headline-md text-on-surface">
-          {isEditMode ? 'Edit User' : 'Create New User'}
-        </h2>
       </div>
 
-      <div className="glass-card p-md sm:p-xl rounded-[16px] sm:rounded-[24px]">
+      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/80 shadow-xs">
         {error && (
-          <div className="mb-lg p-md bg-error-container text-on-error-container rounded-lg font-body-md">
+          <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-lg">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             
             {/* Name */}
-            <div className="relative w-full">
+            <div className="space-y-1.5">
+              <label htmlFor="name" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Full Name <span className="text-red-500">*</span>
+              </label>
               <input
                 id="name"
                 name="name"
                 type="text"
-                placeholder=" "
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="floating-input peer w-full bg-surface-container-lowest border border-[#E7E7E7] rounded-lg px-md pt-lg pb-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                placeholder="e.g., Dr. Dhairya Mehta"
+                className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               />
-              <label htmlFor="name" className="absolute text-on-surface-variant left-md top-1/2 -translate-y-1/2 transition-all duration-200 pointer-events-none origin-left text-body-md font-body-md">
-                Full Name
-              </label>
             </div>
 
             {/* Email */}
-            <div className="relative w-full">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Email Address <span className="text-red-500">*</span>
+              </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                placeholder=" "
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="floating-input peer w-full bg-surface-container-lowest border border-[#E7E7E7] rounded-lg px-md pt-lg pb-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                placeholder="admin@sharnam.com"
+                className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               />
-              <label htmlFor="email" className="absolute text-on-surface-variant left-md top-1/2 -translate-y-1/2 transition-all duration-200 pointer-events-none origin-left text-body-md font-body-md">
-                Email Address
-              </label>
             </div>
 
             {/* Phone */}
-            <div className="relative w-full">
+            <div className="space-y-1.5">
+              <label htmlFor="phone" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Phone Number
+              </label>
               <input
                 id="phone"
                 name="phone"
                 type="text"
-                placeholder=" "
-                required
                 value={formData.phone}
                 onChange={handleChange}
-                className="floating-input peer w-full bg-surface-container-lowest border border-[#E7E7E7] rounded-lg px-md pt-lg pb-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                placeholder="+91 98765 43210"
+                className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               />
-              <label htmlFor="phone" className="absolute text-on-surface-variant left-md top-1/2 -translate-y-1/2 transition-all duration-200 pointer-events-none origin-left text-body-md font-body-md">
-                Phone Number
-              </label>
             </div>
 
             {/* Password */}
-            <div className="relative w-full">
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                {isEditMode ? 'Password (leave blank to keep current)' : 'Password *'}
+              </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                placeholder=" "
                 autoComplete="new-password"
                 required={!isEditMode}
                 value={formData.password}
                 onChange={handleChange}
-                className="floating-input peer w-full bg-surface-container-lowest border border-[#E7E7E7] rounded-lg px-md pt-lg pb-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                placeholder="••••••••"
+                className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               />
-              <label htmlFor="password" className="absolute text-on-surface-variant left-md top-1/2 -translate-y-1/2 transition-all duration-200 pointer-events-none origin-left text-body-md font-body-md">
-                {isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}
-              </label>
             </div>
 
             {/* User Type */}
-            <div className="relative w-full">
+            <div className="space-y-1.5">
+              <label htmlFor="userType" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Role / Access Level <span className="text-red-500">*</span>
+              </label>
               <select
                 id="userType"
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
-                className="peer w-full bg-surface-container-lowest border border-[#E7E7E7] rounded-lg px-md pt-lg pb-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer h-[58px]"
+                className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all cursor-pointer"
               >
+                <option value="">-- Choose Role / Access Level --</option>
                 {userTypes.map(ut => (
                   <option key={ut.id} value={ut.id}>
                     {ut.userType}
                   </option>
                 ))}
               </select>
-              <label htmlFor="userType" className="absolute left-md top-[10px] text-label-md text-on-surface-variant scale-85 transition-all duration-200 pointer-events-none origin-left font-body-md peer-focus:text-primary whitespace-nowrap">
-                Role
-              </label>
-              <div className="absolute right-md top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
             </div>
 
-            <div className="relative w-full">
+            {/* Status */}
+            <div className="space-y-1.5">
+              <label htmlFor="isStatus" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Account Status
+              </label>
               <select
                 id="isStatus"
                 name="isStatus"
                 value={formData.isStatus}
                 onChange={handleChange}
-                className="peer w-full bg-surface-container-lowest border border-[#E7E7E7] rounded-lg px-md pt-lg pb-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer h-[58px]"
+                className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               >
                 <option value={1}>Active</option>
                 <option value={0}>Inactive</option>
               </select>
-              <label htmlFor="isStatus" className="absolute left-md top-[10px] text-label-md text-on-surface-variant scale-85 transition-all duration-200 pointer-events-none origin-left font-body-md peer-focus:text-primary whitespace-nowrap">
-                Status
-              </label>
-              <div className="absolute right-md top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
             </div>
 
           </div>
 
-          <div className="flex justify-end border-t border-[#E7E7E7] pt-lg mt-xl">
+          <div className="pt-5 border-t border-gray-100 flex items-center justify-end gap-3">
+            <Link
+              to="/admin/users"
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </Link>
             <button
               type="submit"
               disabled={saving}
-              className="w-full sm:w-auto flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary-container px-xl py-sm rounded-lg font-label-md transition-colors shadow-sm disabled:opacity-50 min-h-[42px]"
+              className="inline-flex items-center gap-2 bg-[#cc3b38] hover:bg-[#b52f2c] text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-xs transition-all cursor-pointer disabled:opacity-50"
             >
-              <Save size={18} />
+              <Save size={16} />
               {saving ? 'Saving...' : 'Save User'}
             </button>
           </div>

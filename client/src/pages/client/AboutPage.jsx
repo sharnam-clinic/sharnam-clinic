@@ -76,8 +76,8 @@ const AboutPage = () => {
     <div ref={pageRef} className="bg-[#faf7f5] pb-20 text-[#1f2937]">
       {/* 1. Header Banner & Profile */}
       <header className="pt-12 pb-16 px-6 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-7 reveal active space-y-4">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center w-full">
+          <div className="col-span-12 lg:col-span-7 reveal active space-y-4 w-full">
             <span className="inline-block px-4 py-1.5 bg-[#fcebeb] text-[#cc3b38] rounded-full font-['Inter'] text-[13px] font-bold uppercase tracking-wider">
               Practitioner Profile & Clinic Story
             </span>
@@ -109,7 +109,7 @@ const AboutPage = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-5 reveal active flex justify-center" style={{ transitionDelay: '150ms' }}>
+          <div className="col-span-12 lg:col-span-5 reveal active flex justify-center w-full" style={{ transitionDelay: '150ms' }}>
             <BusinessCard />
           </div>
         </div>
