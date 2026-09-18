@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../utils/api';
 import * as Icons from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../utils/api';
 
 const ClinicPhotoForm = () => {
   const navigate = useNavigate();
@@ -53,12 +54,16 @@ const ClinicPhotoForm = () => {
     try {
       if (isEdit) {
         await api.put(`/clinic-photos/${id}`, formData);
+        toast.success('Clinic photo updated successfully');
       } else {
         await api.post('/clinic-photos', formData);
+        toast.success('Clinic photo added successfully');
       }
       navigate('/admin/clinic-photos');
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      const msg = err.response?.data?.message || 'Something went wrong';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

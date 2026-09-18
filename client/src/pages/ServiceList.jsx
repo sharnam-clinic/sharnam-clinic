@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext, useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
 
@@ -8,6 +9,35 @@ const ServiceList = () => {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categoryMap, setCategoryMap] = useState({});
+
+  // Extract permissions from ProtectedLayout outlet context
+  const outlet = useOutletContext() || {};
+  const menus = outlet.menus || [];
+  const location = useLocation();
+  const currentMenu = menus.find((m) => m.listPageRoute === location.pathname) || {};
+
+  let isSuperAdmin = false;
+  try {
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    if (
+      storedUser?.userType === 1 ||
+      Number(storedUser?.userType) === 1 ||
+      storedUser?.role === 'admin' ||
+      storedUser?.userTypeName === 'Super Admin'
+    ) {
+      isSuperAdmin = true;
+    }
+  } catch {}
+
+  const permissions = isSuperAdmin
+    ? { isWrite: 1, isEdit: 1, isDelete: 1, isRead: 1 }
+    : {
+        isWrite: Number(currentMenu.userPermission?.isWrite) === 1 ? 1 : 0,
+        isEdit: Number(currentMenu.userPermission?.isEdit) === 1 ? 1 : 0,
+        isDelete: Number(currentMenu.userPermission?.isDelete) === 1 ? 1 : 0,
+        isRead: Number(currentMenu.userPermission?.isRead) === 1 ? 1 : 0,
+      };
 
   const fetchServices = async () => {
     try {
@@ -23,57 +53,77 @@ const ServiceList = () => {
 
   useEffect(() => {
     fetchServices();
+    const loadCategories = async () => {
+      try {
+        const res = await api.get('/categories');
+        if (res.data?.status && res.data.result) {
+          const map = {};
+          res.data.result.forEach((c) => {
+            if (c.slug) map[c.slug] = c.name;
+            map[c.name] = c.name;
+          });
+          setCategoryMap(map);
+        }
+      } catch {}
+    };
+    loadCategories();
   }, []);
 
   const handleDelete = async (id) => {
+    if (!permissions.isDelete) {
+      toast.error('You do not have permission to delete services.');
+      return;
+    }
     if (window.confirm('Are you sure you want to delete this service?')) {
       try {
         await api.delete(`/services/${id}`);
+        toast.success('Service deleted successfully');
         fetchServices();
       } catch (err) {
         console.error('Failed to delete service', err);
+        toast.error(err.response?.data?.message || 'Failed to delete service');
       }
     }
   };
 
   const columns = [
-    { 
-      key: 'name', 
-      label: 'Service Name', 
+    {
+      key: 'name',
+      label: 'Service Name',
       sortable: true,
-      render: (name) => (
-        <span className="font-semibold text-gray-900">{name}</span>
-      )
+      render: (name) => <span className="font-semibold text-gray-900">{name}</span>,
     },
-    { 
-      key: 'category', 
-      label: 'Category', 
+    {
+      key: 'category',
+      label: 'Category',
       sortable: true,
       render: (cat) => (
         <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700">
-          {cat || 'General'}
+          {categoryMap[cat] || cat || 'General'}
         </span>
-      )
+      ),
     },
-    { 
-      key: 'icon', 
+    {
+      key: 'icon',
       label: 'Icon',
       render: (icon) => (
         <div className="w-8 h-8 rounded-lg bg-red-50 text-[#cc3b38] flex items-center justify-center">
           <span className="material-symbols-outlined text-[20px]">{icon || 'medical_services'}</span>
         </div>
-      )
+      ),
     },
     { key: 'sortOrder', label: 'Order', sortable: true },
     {
       key: 'isStatus',
       label: 'Status',
       render: (status) => (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-          status === 1 
-            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-            : 'bg-rose-50 text-rose-700 border border-rose-200'
-        }`}>
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+            status === 1
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'bg-rose-50 text-rose-700 border border-rose-200'
+          }`}
+        >
           <span className={`w-1.5 h-1.5 rounded-full ${status === 1 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
           {status === 1 ? 'Active' : 'Inactive'}
         </span>
@@ -83,25 +133,38 @@ const ServiceList = () => {
       key: 'actions',
       label: 'Actions',
       sortable: false,
-      render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate(`/admin/services/edit/${row.id}`)}
-            className="p-1.5 text-gray-500 hover:text-[#cc3b38] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-            title="Edit Service"
-          >
-            <Icons.Edit2 size={16} />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-            title="Delete Service"
-          >
-            <Icons.Trash2 size={16} />
-          </button>
-        </div>
-      ),
-    }
+      render: (_, row) => {
+        const canEdit = Boolean(permissions.isEdit);
+        const canDelete = Boolean(permissions.isDelete);
+
+        if (!canEdit && !canDelete) {
+          return <span className="text-xs text-gray-400 italic">View only</span>;
+        }
+
+        return (
+          <div className="flex items-center gap-2">
+            {canEdit && (
+              <button
+                onClick={() => navigate(`/admin/services/edit/${row.id}`)}
+                className="p-1.5 text-gray-500 hover:text-[#cc3b38] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                title="Edit Service"
+              >
+                <Icons.Edit2 size={16} />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => handleDelete(row.id)}
+                className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                title="Delete Service"
+              >
+                <Icons.Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        );
+      },
+    },
   ];
 
   return (
@@ -114,13 +177,15 @@ const ServiceList = () => {
             Manage constitutional homeopathic services and specialized care packages.
           </p>
         </div>
-        <button
-          onClick={() => navigate('/admin/services/new')}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#cc3b38] hover:bg-[#b52f2c] text-white rounded-xl text-sm font-semibold shadow-xs transition-all cursor-pointer shrink-0"
-        >
-          <Icons.Plus size={16} />
-          Add New Service
-        </button>
+        {Boolean(permissions.isWrite) && (
+          <button
+            onClick={() => navigate('/admin/services/new')}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#cc3b38] hover:bg-[#b52f2c] text-white rounded-xl text-sm font-semibold shadow-xs transition-all cursor-pointer shrink-0"
+          >
+            <Icons.Plus size={16} />
+            Add New Service
+          </button>
+        )}
       </div>
 
       {/* Data Table */}

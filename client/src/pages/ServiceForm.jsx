@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import api from '../utils/api';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../utils/api';
 
 const ServiceForm = () => {
   const navigate = useNavigate();
@@ -18,13 +19,40 @@ const ServiceForm = () => {
     sortOrder: 0,
     isStatus: 1,
   });
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [newItem, setNewItem] = useState('');
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/categories');
+        if (res.data?.status && res.data.result) {
+          setCategories(res.data.result.filter((c) => c.isStatus === 1));
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+
+    fetchCategories();
     if (isEdit) fetchService();
-  }, [id]);
+  }, [id, isEdit]);
+
+  // Normalize category if matching existing category in table
+  useEffect(() => {
+    if (formData.category && categories.length > 0) {
+      const match = categories.find(
+        (c) =>
+          c.name.toLowerCase() === formData.category.toLowerCase() ||
+          c.slug?.toLowerCase() === formData.category.toLowerCase()
+      );
+      if (match && formData.category !== match.name) {
+        setFormData((prev) => ({ ...prev, category: match.name }));
+      }
+    }
+  }, [categories, formData.category]);
 
   const fetchService = async () => {
     try {
@@ -65,11 +93,18 @@ const ServiceForm = () => {
     setError('');
     setLoading(true);
     try {
-      if (isEdit) await api.put(`/services/${id}`, formData);
-      else await api.post('/services', formData);
+      if (isEdit) {
+        await api.put(`/services/${id}`, formData);
+        toast.success('Service updated successfully');
+      } else {
+        await api.post('/services', formData);
+        toast.success('Service added successfully');
+      }
       navigate('/admin/services');
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      const msg = err.response?.data?.message || 'Something went wrong';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -124,9 +159,18 @@ const ServiceForm = () => {
 
             {/* Category */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                Category <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <Link
+                  to="/admin/categories/new"
+                  target="_blank"
+                  className="text-[11px] text-[#cc3b38] hover:underline font-semibold"
+                >
+                  + Add New Category
+                </Link>
+              </div>
               <select
                 name="category"
                 required
@@ -135,30 +179,45 @@ const ServiceForm = () => {
                 className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               >
                 <option value="">Select Category</option>
-                <option value="chronic">Chronic Care</option>
-                <option value="acute">Acute Illnesses</option>
-                <option value="pediatric">Pediatric Health</option>
-                <option value="women">Women's Health</option>
-                <option value="skin">Skin & Hair</option>
-                <option value="respiratory">Respiratory Health</option>
-                <option value="digestive">Digestive Disorders</option>
-                <option value="mental">Mental & Emotional Wellness</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* Icon */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                Icon (Material Symbol Name)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                  Icon (Material Symbol Name)
+                </label>
+                {formData.icon && (
+                  <span className="inline-flex items-center gap-1 text-xs text-[#cc3b38] font-medium bg-red-50 px-2 py-0.5 rounded-md">
+                    Preview: <span className="material-symbols-outlined text-base align-middle">{formData.icon}</span>
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 name="icon"
                 value={formData.icon}
                 onChange={handleChange}
-                placeholder="e.g., psychology, spa, healing"
+                placeholder="e.g., dermatology, psychology, spa, healing"
                 className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               />
+              <div className="flex items-center justify-between text-[11px] text-gray-500 pt-0.5">
+                <span>Find icon names:</span>
+                <a
+                  href="https://fonts.google.com/icons?icon.set=Material+Symbols"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#cc3b38] hover:underline font-semibold inline-flex items-center gap-0.5"
+                >
+                  Browse Google Material Symbols ↗
+                </a>
+              </div>
             </div>
 
             {/* Sort Order */}

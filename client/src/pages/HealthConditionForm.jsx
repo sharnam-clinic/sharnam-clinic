@@ -1,7 +1,52 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import api from '../utils/api';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../utils/api';
+
+const ListBuilder = ({ label, items, value, onChange, onAdd, onRemove, placeholder }) => (
+  <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-200 space-y-3">
+    <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide">{label}</label>
+    <div className="flex gap-2">
+      <input 
+        type="text" 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+        placeholder={placeholder} 
+        className="flex-1 bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            onAdd();
+          }
+        }}
+      />
+      <button 
+        type="button" 
+        onClick={onAdd} 
+        className="bg-[#2c7a94] hover:bg-[#236378] text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors cursor-pointer shrink-0"
+      >
+        + Add
+      </button>
+    </div>
+    {items && items.length > 0 && (
+      <ul className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+        {items.map((item, idx) => (
+          <li key={idx} className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700 shadow-2xs">
+            <span className="truncate pr-2">• {item}</span>
+            <button 
+              type="button" 
+              onClick={() => onRemove(idx)} 
+              className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer p-0.5"
+            >
+              <Icons.Trash2 size={13} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
 
 const HealthConditionForm = () => {
   const navigate = useNavigate();
@@ -13,6 +58,7 @@ const HealthConditionForm = () => {
     symptoms: [], causes: [], prevention: [], whenToSeeDoctor: '',
     sortOrder: 0, isStatus: 1,
   });
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -20,8 +66,34 @@ const HealthConditionForm = () => {
   const [inputs, setInputs] = useState({ symptom: '', cause: '', prevent: '' });
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/categories');
+        if (res.data?.status && res.data.result) {
+          setCategories(res.data.result.filter((c) => c.isStatus === 1));
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+
+    fetchCategories();
     if (isEdit) fetchCondition();
-  }, [id]);
+  }, [id, isEdit]);
+
+  // Normalize category if matching existing category in table
+  useEffect(() => {
+    if (formData.category && categories.length > 0) {
+      const match = categories.find(
+        (c) =>
+          c.name.toLowerCase() === formData.category.toLowerCase() ||
+          c.slug?.toLowerCase() === formData.category.toLowerCase()
+      );
+      if (match && formData.category !== match.name) {
+        setFormData((prev) => ({ ...prev, category: match.name }));
+      }
+    }
+  }, [categories, formData.category]);
 
   const fetchCondition = async () => {
     try {
@@ -50,53 +122,25 @@ const HealthConditionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); setLoading(true);
+    setError('');
+    setLoading(true);
     try {
-      if (isEdit) await api.put(`/health-conditions/${id}`, formData);
-      else await api.post('/health-conditions', formData);
+      if (isEdit) {
+        await api.put(`/health-conditions/${id}`, formData);
+        toast.success('Health condition updated successfully');
+      } else {
+        await api.post('/health-conditions', formData);
+        toast.success('Health condition added successfully');
+      }
       navigate('/admin/health-conditions');
-    } catch (err) { setError(err.response?.data?.message || 'Something went wrong'); } 
-    finally { setLoading(false); }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Something went wrong';
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const ListBuilder = ({ label, arrayName, inputKey, placeholder }) => (
-    <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-200 space-y-3">
-      <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide">{label}</label>
-      <div className="flex gap-2">
-        <input 
-          type="text" 
-          value={inputs[inputKey]} 
-          onChange={(e) => setInputs(prev => ({...prev, [inputKey]: e.target.value}))} 
-          placeholder={placeholder} 
-          className="flex-1 bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
-          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addListArrayItem(arrayName, inputKey))}
-        />
-        <button 
-          type="button" 
-          onClick={() => addListArrayItem(arrayName, inputKey)} 
-          className="bg-[#2c7a94] hover:bg-[#236378] text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors cursor-pointer shrink-0"
-        >
-          + Add
-        </button>
-      </div>
-      {formData[arrayName].length > 0 && (
-        <ul className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
-          {formData[arrayName].map((item, idx) => (
-            <li key={idx} className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700 shadow-2xs">
-              <span className="truncate pr-2">• {item}</span>
-              <button 
-                type="button" 
-                onClick={() => removeListArrayItem(arrayName, idx)} 
-                className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer p-0.5"
-              >
-                <Icons.Trash2 size={13} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -147,9 +191,18 @@ const HealthConditionForm = () => {
 
             {/* Category */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                Category <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <Link
+                  to="/admin/categories/new"
+                  target="_blank"
+                  className="text-[11px] text-[#cc3b38] hover:underline font-semibold"
+                >
+                  + Add New Category
+                </Link>
+              </div>
               <select 
                 name="category" 
                 required 
@@ -158,27 +211,45 @@ const HealthConditionForm = () => {
                 className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
               >
                 <option value="">Select Category</option>
-                <option value="skin">Skin & Hair</option>
-                <option value="respiratory">Respiratory Health</option>
-                <option value="digestive">Digestive Disorders</option>
-                <option value="women">Women's Health</option>
-                <option value="chronic">Chronic Illness</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* Icon */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                Icon (Material Symbol)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                  Icon (Material Symbol)
+                </label>
+                {formData.icon && (
+                  <span className="inline-flex items-center gap-1 text-xs text-[#cc3b38] font-medium bg-red-50 px-2 py-0.5 rounded-md">
+                    Preview: <span className="material-symbols-outlined text-base align-middle">{formData.icon}</span>
+                  </span>
+                )}
+              </div>
               <input 
                 type="text" 
                 name="icon" 
                 value={formData.icon} 
                 onChange={handleChange} 
-                placeholder="e.g., healing, spa"
+                placeholder="e.g., healing, spa, air, dermatology"
                 className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all" 
               />
+              <div className="flex items-center justify-between text-[11px] text-gray-500 pt-0.5">
+                <span>Find icon names:</span>
+                <a
+                  href="https://fonts.google.com/icons?icon.set=Material+Symbols"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#cc3b38] hover:underline font-semibold inline-flex items-center gap-0.5"
+                >
+                  Browse Google Material Symbols ↗
+                </a>
+              </div>
             </div>
           </div>
 
@@ -199,9 +270,33 @@ const HealthConditionForm = () => {
 
           {/* List Builders Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <ListBuilder label="Common Symptoms" arrayName="symptoms" inputKey="symptom" placeholder="Add symptom..." />
-            <ListBuilder label="Key Causes & Triggers" arrayName="causes" inputKey="cause" placeholder="Add cause..." />
-            <ListBuilder label="Prevention & Lifestyle Tips" arrayName="prevention" inputKey="prevent" placeholder="Add tip..." />
+            <ListBuilder 
+              label="Common Symptoms" 
+              items={formData.symptoms} 
+              value={inputs.symptom} 
+              onChange={(val) => setInputs(prev => ({ ...prev, symptom: val }))}
+              onAdd={() => addListArrayItem('symptoms', 'symptom')} 
+              onRemove={(idx) => removeListArrayItem('symptoms', idx)}
+              placeholder="Add symptom..." 
+            />
+            <ListBuilder 
+              label="Key Causes & Triggers" 
+              items={formData.causes} 
+              value={inputs.cause} 
+              onChange={(val) => setInputs(prev => ({ ...prev, cause: val }))}
+              onAdd={() => addListArrayItem('causes', 'cause')} 
+              onRemove={(idx) => removeListArrayItem('causes', idx)}
+              placeholder="Add cause..." 
+            />
+            <ListBuilder 
+              label="Prevention & Lifestyle Tips" 
+              items={formData.prevention} 
+              value={inputs.prevent} 
+              onChange={(val) => setInputs(prev => ({ ...prev, prevent: val }))}
+              onAdd={() => addListArrayItem('prevention', 'prevent')} 
+              onRemove={(idx) => removeListArrayItem('prevention', idx)}
+              placeholder="Add tip..." 
+            />
           </div>
 
           {/* When to See Doctor */}

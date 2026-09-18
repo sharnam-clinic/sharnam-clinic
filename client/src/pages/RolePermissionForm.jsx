@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Save, ShieldCheck, CheckSquare, Square } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 const RolePermissionForm = () => {
@@ -184,9 +185,11 @@ const RolePermissionForm = () => {
     try {
       await api.post('/permissions/bulk', payload);
       setSuccess('Role permissions saved successfully!');
+      toast.success('Role permissions saved successfully!');
     } catch (err) {
-      // Mock success if DB is disconnected
-      setSuccess('Role permissions saved successfully (Preview mode)!');
+      const errMsg = err.response?.data?.message || 'Failed to save role permissions';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setSaving(false);
     }

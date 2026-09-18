@@ -1,17 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import api from '../../utils/api';
 
 const ContactPage = () => {
   const pageRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     name: '',
     phone: '',
     email: '',
-    subject: 'General Inquiry',
+    subject: '',
     message: '',
   });
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await api.get('/categories');
+        if (res.data?.status && Array.isArray(res.data.result)) {
+          setCategories(res.data.result.filter((c) => c.isStatus === 1));
+        }
+      } catch {}
+    };
+    fetchCats();
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -22,20 +36,34 @@ const ContactPage = () => {
     return () => observer.disconnect();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setTimeout(() => {
-      toast.success('Thank you for contacting Sharnam Clinic! We will get back to you shortly.');
+    if (!form.name.trim() || !form.phone.trim() || !form.message.trim()) {
+      toast.error('Please fill in your name, phone number, and message.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const res = await api.post('/inquiries', form);
+      if (res.data?.status) {
+        toast.success('Thank you! Your message has been sent to Sharnam Clinic. We will contact you soon.', { duration: 5000 });
+        setForm({
+          name: '',
+          phone: '',
+          email: '',
+          subject: '',
+          message: '',
+        });
+      } else {
+        toast.error('Could not submit inquiry. Please try again or call us directly.');
+      }
+    } catch (err) {
+      console.error('Inquiry submission error:', err);
+      toast.error(err.response?.data?.message || 'Failed to submit inquiry. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      setForm({
-        name: '',
-        phone: '',
-        email: '',
-        subject: 'General Inquiry',
-        message: '',
-      });
-    }, 600);
+    }
   };
 
   return (
@@ -175,11 +203,14 @@ const ContactPage = () => {
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
                     className="w-full bg-[#faf7f5] border border-gray-200 rounded-xl px-4 py-3 font-['Inter'] text-[15px] focus:outline-none focus:border-[#cc3b38]"
+                    required
                   >
-                    <option value="General Inquiry">General Inquiry</option>
-                    <option value="Treatment Consultation">Treatment Consultation</option>
-                    <option value="Follow-Up Question">Follow-Up Question</option>
-                    <option value="Clinic Location & Parking">Clinic Location & Parking</option>
+                    <option value="" disabled>Select a Subject</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

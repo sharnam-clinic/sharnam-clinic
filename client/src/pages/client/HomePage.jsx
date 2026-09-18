@@ -1,8 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../../utils/api';
 
 const HomePage = () => {
   const pageRef = useRef(null);
+  const [heroImage, setHeroImage] = useState(
+    'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80'
+  );
+  const [featuredServices, setFeaturedServices] = useState([]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -20,11 +25,39 @@ const HomePage = () => {
     elements?.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
+  }, [featuredServices]);
+
+  // Fetch live photos and services from database
+  useEffect(() => {
+    const fetchLiveContent = async () => {
+      try {
+        const [photosRes, servicesRes] = await Promise.all([
+          api.get('/clinic-photos'),
+          api.get('/services'),
+        ]);
+
+        if (photosRes.data?.status && Array.isArray(photosRes.data.result) && photosRes.data.result.length > 0) {
+          const first = photosRes.data.result[0];
+          if (first?.imageUrl || first?.image_url) {
+            setHeroImage(first.imageUrl || first.image_url);
+          }
+        }
+
+        if (servicesRes.data?.status && Array.isArray(servicesRes.data.result)) {
+          const active = servicesRes.data.result.filter((s) => s.isStatus === 1 || s.isStatus === undefined);
+          setFeaturedServices(active.slice(0, 3));
+        }
+      } catch (err) {
+        console.warn('Failed to load live home data:', err);
+      }
+    };
+
+    fetchLiveContent();
   }, []);
 
   return (
     <div ref={pageRef} className="bg-[#fff8f7] min-h-screen text-[#1f2937] pb-16">
-      {/* 1. HERO SECTION (Home-only content) */}
+      {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden pt-8 pb-14 sm:pt-12 sm:pb-20 lg:pt-20 lg:pb-28 bg-gradient-to-b from-white via-[#fff8f7] to-[#fcf4f2] border-b border-[#e5d8d6]">
         {/* Background Decorative Blur Blobs */}
         <div className="absolute top-10 right-10 w-96 h-96 bg-[#fcebeb] rounded-full blur-3xl opacity-60 pointer-events-none" />
@@ -39,7 +72,9 @@ const HomePage = () => {
 
             <h1 className="font-['Playfair_Display'] text-[30px] sm:text-[48px] lg:text-[58px] font-extrabold text-[#1f2937] leading-[1.15] tracking-tight">
               Holistic Healing for <br className="hidden sm:block" />
-              <span className="text-[#cc3b38] underline decoration-[#fcebeb] underline-offset-8">Mind, Body & Soul</span>
+              <span className="text-[#cc3b38] underline decoration-[#fcebeb] underline-offset-8">
+                Mind, Body & Soul
+              </span>
             </h1>
 
             <p className="font-['Inter'] text-[15px] sm:text-[18px] text-[#4b5563] leading-relaxed max-w-2xl font-normal">
@@ -85,9 +120,12 @@ const HomePage = () => {
             <div className="relative w-full max-w-md bg-white rounded-[32px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-[#f0e6e4]">
               <div className="relative rounded-2xl overflow-hidden mb-6 aspect-4/3 bg-[#f8f4f2]">
                 <img
-                  src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80"
+                  src={heroImage}
                   alt="Sharnam Clinic Consultation Room"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-3 text-white">
@@ -112,8 +150,61 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 2. NAVIGATION TEASERS SECTION (Titles + 1-line teaser pointing to pages) */}
-      <section className="py-20 max-w-7xl mx-auto px-6 lg:px-8">
+      {/* 2. FEATURED CLINICAL SERVICES (Loaded dynamically from database) */}
+      {featuredServices.length > 0 && (
+        <section className="py-16 max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 reveal">
+            <div>
+              <span className="text-[#cc3b38] font-bold font-['Inter'] text-[13px] uppercase tracking-widest block mb-2">
+                Specialized Treatments
+              </span>
+              <h2 className="font-['Playfair_Display'] text-[30px] sm:text-[38px] font-bold text-[#1f2937]">
+                Featured Clinical Care
+              </h2>
+            </div>
+            <Link
+              to="/services"
+              className="mt-4 sm:mt-0 inline-flex items-center gap-1.5 text-[#cc3b38] font-['Inter'] font-semibold text-[14px] hover:underline"
+            >
+              View Full Service Catalog <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featuredServices.map((srv, idx) => (
+              <div
+                key={srv.id || idx}
+                className="bg-white p-7 rounded-3xl border border-gray-200/90 shadow-sm hover:shadow-md hover:border-[#cc3b38] transition-all flex flex-col justify-between reveal"
+                style={{ transitionDelay: `${idx * 100}ms` }}
+              >
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-[#fcebeb] text-[#cc3b38] flex items-center justify-center mb-5">
+                    <span className="material-symbols-outlined text-[26px]">
+                      {srv.icon || 'medical_services'}
+                    </span>
+                  </div>
+                  <h3 className="font-['Playfair_Display'] text-[20px] font-bold text-[#1f2937] mb-2">
+                    {srv.name}
+                  </h3>
+                  <p className="font-['Inter'] text-[14px] text-[#4b5563] line-clamp-3 leading-relaxed mb-4">
+                    {srv.description}
+                  </p>
+                </div>
+                <Link
+                  to="/services"
+                  className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-semibold text-[#cc3b38] hover:underline"
+                >
+                  <span>Learn More</span>
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 3. NAVIGATION TEASERS SECTION */}
+      <section className="py-16 max-w-7xl mx-auto px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-14 reveal">
           <span className="text-[#cc3b38] font-bold font-['Inter'] text-[13px] uppercase tracking-widest block mb-2">
             Discover Our Clinic
@@ -145,7 +236,9 @@ const HomePage = () => {
             </div>
             <div className="mt-6 pt-4 border-t border-gray-100 flex items-center font-['Inter'] text-[14px] font-semibold text-[#cc3b38]">
               View All Services
-              <span className="material-symbols-outlined text-[18px] ml-1 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              <span className="material-symbols-outlined text-[18px] ml-1 group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
             </div>
           </Link>
 
@@ -168,7 +261,9 @@ const HomePage = () => {
             </div>
             <div className="mt-6 pt-4 border-t border-gray-100 flex items-center font-['Inter'] text-[14px] font-semibold text-[#cc3b38]">
               Read Health Guides
-              <span className="material-symbols-outlined text-[18px] ml-1 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              <span className="material-symbols-outlined text-[18px] ml-1 group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
             </div>
           </Link>
 
@@ -191,13 +286,15 @@ const HomePage = () => {
             </div>
             <div className="mt-6 pt-4 border-t border-gray-100 flex items-center font-['Inter'] text-[14px] font-semibold text-[#2c7a94]">
               Learn About Us
-              <span className="material-symbols-outlined text-[18px] ml-1 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              <span className="material-symbols-outlined text-[18px] ml-1 group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
             </div>
           </Link>
         </div>
       </section>
 
-      {/* 3. CALL-TO-ACTION BANNER */}
+      {/* 4. CALL-TO-ACTION BANNER */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 my-8">
         <div className="bg-gradient-to-r from-[#1f2937] via-[#2c3e50] to-[#1f2937] text-white rounded-[32px] p-8 sm:p-14 shadow-2xl relative overflow-hidden reveal">
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#cc3b38]/20 rounded-full blur-3xl pointer-events-none" />

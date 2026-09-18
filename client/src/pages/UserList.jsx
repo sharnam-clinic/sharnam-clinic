@@ -92,24 +92,37 @@ const UserList = () => {
       key: 'actions',
       label: 'Actions',
       sortable: false,
-      render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Link
-            to={`/admin/users/edit/${row.id}`}
-            className="p-1.5 text-gray-500 hover:text-[#cc3b38] hover:bg-red-50 rounded-lg transition-colors"
-            title="Edit User"
-          >
-            <Edit size={16} />
-          </Link>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-            title="Delete User"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      )
+      render: (_, row) => {
+        const canEdit = Boolean(permissions.isEdit);
+        const canDelete = Boolean(permissions.isDelete);
+
+        if (!canEdit && !canDelete) {
+          return <span className="text-xs text-gray-400 italic">View only</span>;
+        }
+
+        return (
+          <div className="flex items-center gap-2">
+            {canEdit && (
+              <Link
+                to={`/admin/users/edit/${row.id}`}
+                className="p-1.5 text-gray-500 hover:text-[#cc3b38] hover:bg-red-50 rounded-lg transition-colors"
+                title="Edit User"
+              >
+                <Edit size={16} />
+              </Link>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => handleDelete(row.id)}
+                className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                title="Delete User"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        );
+      }
     }
   ];
 
@@ -128,13 +141,15 @@ const UserList = () => {
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Users Management</h2>
           <p className="text-sm text-gray-500 mt-1">View, manage, and assign system access permissions.</p>
         </div>
-        <Link
-          to="/admin/users/new"
-          className="inline-flex items-center justify-center gap-2 bg-[#cc3b38] hover:bg-[#b52f2c] text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-xs transition-all shrink-0"
-        >
-          <Plus size={16} />
-          Add New User
-        </Link>
+        {Boolean(permissions.isWrite) && (
+          <Link
+            to="/admin/users/new"
+            className="inline-flex items-center justify-center gap-2 bg-[#cc3b38] hover:bg-[#b52f2c] text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-xs transition-all shrink-0"
+          >
+            <Plus size={16} />
+            Add New User
+          </Link>
+        )}
       </div>
 
       <DataTable columns={columns} data={users} exportFileName="Sharnam_Users" />

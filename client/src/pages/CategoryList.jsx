@@ -5,11 +5,10 @@ import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
 
-const HealthConditionList = () => {
+const CategoryList = () => {
   const navigate = useNavigate();
-  const [conditions, setConditions] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categoryMap, setCategoryMap] = useState({});
 
   // Extract permissions from ProtectedLayout outlet context
   const outlet = useOutletContext() || {};
@@ -33,89 +32,59 @@ const HealthConditionList = () => {
   const permissions = isSuperAdmin
     ? { isWrite: 1, isEdit: 1, isDelete: 1, isRead: 1 }
     : {
-        isWrite: Number(currentMenu.userPermission?.isWrite) === 1 ? 1 : 0,
-        isEdit: Number(currentMenu.userPermission?.isEdit) === 1 ? 1 : 0,
-        isDelete: Number(currentMenu.userPermission?.isDelete) === 1 ? 1 : 0,
-        isRead: Number(currentMenu.userPermission?.isRead) === 1 ? 1 : 0,
+        isWrite: Number(currentMenu.userPermission?.isWrite ?? 1),
+        isEdit: Number(currentMenu.userPermission?.isEdit ?? 1),
+        isDelete: Number(currentMenu.userPermission?.isDelete ?? 1),
+        isRead: Number(currentMenu.userPermission?.isRead ?? 1),
       };
 
-  const fetchConditions = async () => {
+  const fetchCategories = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/health-conditions');
-      if (res.data.status) setConditions(res.data.result);
+      const res = await api.get('/categories');
+      if (res.data.status) {
+        setCategories(res.data.result || []);
+      }
     } catch (err) {
-      console.error('Failed to fetch conditions', err);
+      console.error('Failed to fetch categories', err);
+      toast.error('Failed to load categories');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchConditions();
-    const loadCategories = async () => {
-      try {
-        const res = await api.get('/categories');
-        if (res.data?.status && res.data.result) {
-          const map = {};
-          res.data.result.forEach((c) => {
-            if (c.slug) map[c.slug] = c.name;
-            map[c.name] = c.name;
-          });
-          setCategoryMap(map);
-        }
-      } catch {}
-    };
-    loadCategories();
+    fetchCategories();
   }, []);
 
   const handleDelete = async (id) => {
     if (!permissions.isDelete) {
-      toast.error('You do not have permission to delete health conditions.');
+      toast.error('You do not have permission to delete categories.');
       return;
     }
-    if (window.confirm('Are you sure you want to delete this health condition?')) {
+    if (window.confirm('Are you sure you want to delete this category? Services or Conditions under it may need reassignment.')) {
       try {
-        await api.delete(`/health-conditions/${id}`);
-        toast.success('Condition deleted successfully');
-        fetchConditions();
+        await api.delete(`/categories/${id}`);
+        toast.success('Category deleted successfully');
+        fetchCategories();
       } catch (err) {
-        console.error('Failed to delete condition', err);
-        toast.error(err.response?.data?.message || 'Failed to delete condition');
+        console.error('Failed to delete category', err);
+        toast.error(err.response?.data?.message || 'Failed to delete category');
       }
     }
   };
 
   const columns = [
     {
-      key: 'title',
-      label: 'Disease / Condition',
+      key: 'name',
+      label: 'Category Name',
       sortable: true,
-      render: (title) => <span className="font-semibold text-gray-900">{title}</span>,
+      render: (name) => <span className="font-semibold text-gray-900 text-sm">{name}</span>,
     },
-    {
-      key: 'category',
-      label: 'Category',
-      sortable: true,
-      render: (cat) => (
-        <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700">
-          {categoryMap[cat] || cat || 'General'}
-        </span>
-      ),
-    },
-    {
-      key: 'icon',
-      label: 'Icon',
-      render: (icon) => (
-        <div className="w-8 h-8 rounded-lg bg-red-50 text-[#cc3b38] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[20px]">{icon || 'stethoscope'}</span>
-        </div>
-      ),
-    },
-    { key: 'sortOrder', label: 'Order', sortable: true },
     {
       key: 'isStatus',
       label: 'Status',
+      sortable: true,
       render: (status) => (
         <span
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -145,9 +114,9 @@ const HealthConditionList = () => {
           <div className="flex items-center gap-2">
             {canEdit && (
               <button
-                onClick={() => navigate(`/admin/health-conditions/edit/${row.id}`)}
+                onClick={() => navigate(`/admin/categories/edit/${row.id}`)}
                 className="p-1.5 text-gray-500 hover:text-[#cc3b38] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                title="Edit Condition"
+                title="Edit Category"
               >
                 <Icons.Edit2 size={16} />
               </button>
@@ -156,7 +125,7 @@ const HealthConditionList = () => {
               <button
                 onClick={() => handleDelete(row.id)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                title="Delete Condition"
+                title="Delete Category"
               >
                 <Icons.Trash2 size={16} />
               </button>
@@ -169,21 +138,21 @@ const HealthConditionList = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Title and Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Health Conditions Directory</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Categories Master</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Manage illnesses, clinical symptoms, and homeopathic treatment guides.
+            Centrally manage medical and clinical categories bound across Services, Health Conditions, and Website filters.
           </p>
         </div>
         {Boolean(permissions.isWrite) && (
           <button
-            onClick={() => navigate('/admin/health-conditions/new')}
+            onClick={() => navigate('/admin/categories/new')}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#cc3b38] hover:bg-[#b52f2c] text-white rounded-xl text-sm font-semibold shadow-xs transition-all cursor-pointer shrink-0"
           >
             <Icons.Plus size={16} />
-            Add New Condition
+            Add New Category
           </button>
         )}
       </div>
@@ -191,12 +160,12 @@ const HealthConditionList = () => {
       {/* Data Table */}
       <DataTable
         columns={columns}
-        data={conditions}
+        data={categories}
         loading={loading}
-        exportFileName="health_conditions_export"
+        exportFileName="categories_export"
       />
     </div>
   );
 };
 
-export default HealthConditionList;
+export default CategoryList;

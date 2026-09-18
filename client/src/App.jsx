@@ -5,7 +5,6 @@ import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import ClientLayout from './layouts/ClientLayout';
 import Login from './pages/Login';
-import AdminDashboard from './pages/AdminDashboard';
 import UserList from './pages/UserList';
 import UserForm from './pages/UserForm';
 import UserTypeList from './pages/UserTypeList';
@@ -17,6 +16,9 @@ import ServiceList from './pages/ServiceList';
 import ServiceForm from './pages/ServiceForm';
 import HealthConditionList from './pages/HealthConditionList';
 import HealthConditionForm from './pages/HealthConditionForm';
+import CategoryList from './pages/CategoryList';
+import CategoryForm from './pages/CategoryForm';
+import InquiryList from './pages/InquiryList';
 
 // Client pages
 import HomePage from './pages/client/HomePage';
@@ -55,9 +57,13 @@ function App() {
         
         {/* Admin panel */}
         <Route path="/admin" element={<ProtectedLayout />}>
-          <Route index element={<AdminDashboard />} />
+          <Route index element={<Navigate to="/admin/categories" replace />} />
           
           {/* Dynamic Clinic Modules */}
+          <Route path="categories" element={<CategoryList />} />
+          <Route path="categories/new" element={<CategoryForm />} />
+          <Route path="categories/edit/:id" element={<CategoryForm />} />
+
           <Route path="clinic-photos" element={<ClinicPhotoList />} />
           <Route path="clinic-photos/new" element={<ClinicPhotoForm />} />
           <Route path="clinic-photos/edit/:id" element={<ClinicPhotoForm />} />
@@ -69,6 +75,8 @@ function App() {
           <Route path="health-conditions" element={<HealthConditionList />} />
           <Route path="health-conditions/new" element={<HealthConditionForm />} />
           <Route path="health-conditions/edit/:id" element={<HealthConditionForm />} />
+
+          <Route path="inquiries" element={<InquiryList />} />
 
           {/* User & Access Management */}
           <Route path="users" element={<UserList />} />

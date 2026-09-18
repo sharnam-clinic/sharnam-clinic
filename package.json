@@ -1,0 +1,32 @@
+{
+  "name": "sharanam",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "contract:emit": "prisma contract emit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sharnam-clinic/sharnam-clinic.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sharnam-clinic/sharnam-clinic/issues"
+  },
+  "homepage": "https://github.com/sharnam-clinic/sharnam-clinic#readme",
+  "devDependencies": {
+    "@prisma/cli-engine": "^0.4.0",
+    "@prisma/client": "^5.22.0",
+    "@types/node": "^26.6.1",
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@prisma/orm-postgres": "^8.0.0-rc.11",
+    "dotenv": "^18.0.0"
+  }
+}

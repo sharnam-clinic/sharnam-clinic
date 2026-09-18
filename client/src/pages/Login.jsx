@@ -17,24 +17,6 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    // Instant bypass for test/overview credentials without database
-    if (email === 'admin@gmail.com' && password === '123456') {
-      const mockUser = {
-        id: 1,
-        name: 'Clinic Administrator',
-        email: 'admin@gmail.com',
-        role: 'admin',
-        userType: 'Super Admin',
-      };
-      localStorage.setItem('accessToken', 'mock-admin-token-sharnam-demo');
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setTimeout(() => {
-        setLoading(false);
-        navigate('/admin');
-      }, 300);
-      return;
-    }
-
     try {
       const response = await api.post('/auth/login', {
         email,
@@ -45,8 +27,24 @@ const Login = () => {
         localStorage.setItem('accessToken', response.data.result.accessToken);
         localStorage.setItem('user', JSON.stringify(response.data.result.user));
         navigate('/admin');
+        return;
       }
     } catch (err) {
+      // Fallback bypass for default admin if database is not yet migrated or offline
+      if (email === 'admin@gmail.com' && password === '123456') {
+        const mockUser = {
+          id: 1,
+          name: 'Clinic Administrator',
+          email: 'admin@gmail.com',
+          role: 'admin',
+          userType: 1,
+          userTypeName: 'Super Admin',
+        };
+        localStorage.setItem('accessToken', 'mock-admin-token-sharnam-demo');
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        navigate('/admin');
+        return;
+      }
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
     } finally {
       setLoading(false);

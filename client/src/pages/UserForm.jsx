@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 const UserForm = () => {
@@ -16,6 +17,7 @@ const UserForm = () => {
     userType: 1,
     isStatus: 1
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [userTypes, setUserTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -54,7 +56,7 @@ const UserForm = () => {
                 name: user.name || '',
                 email: user.email || '',
                 phone: user.phone || '',
-                password: '',
+                password: user.password || '',
                 userType: user.userType || loadedTypes[0].id,
                 isStatus: user.isStatus ?? 1
               });
@@ -96,12 +98,16 @@ const UserForm = () => {
 
       if (isEditMode) {
         await api.put(`/users/${id}`, payload);
+        toast.success('User updated successfully');
       } else {
         await api.post('/users', payload);
+        toast.success('User created successfully');
       }
       navigate('/admin/users');
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      const msg = err.response?.data?.message || 'Something went wrong';
+      setError(msg);
+      toast.error(msg);
       console.error(err);
     } finally {
       setSaving(false);
@@ -196,19 +202,29 @@ const UserForm = () => {
             {/* Password */}
             <div className="space-y-1.5">
               <label htmlFor="password" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                {isEditMode ? 'Password (leave blank to keep current)' : 'Password *'}
+                Password <span className="text-red-500">*</span>
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required={!isEditMode}
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter password"
+                  className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 pr-11 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             {/* User Type */}

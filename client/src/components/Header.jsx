@@ -9,16 +9,16 @@ const Header = ({ toggleSidebar, menus = [] }) => {
 
   // Map pathnames to page titles dynamically using MenuMaster
   const getPageTitle = () => {
-    if (location.pathname === '/admin') return 'Dashboard';
-    
     // Find the menu whose listPageRoute or formPageRoute matches the current path
-    // We check exact match for listPageRoute, or prefix match for formPageRoute if editing
-    const currentMenu = menus.find(menu => {
+    const currentMenu = menus.find((menu) => {
       if (!menu.listPageRoute) return false;
       return location.pathname === menu.listPageRoute || location.pathname.startsWith(menu.listPageRoute + '/');
     });
 
-    return currentMenu?.pageName || 'Admin Panel';
+    if (currentMenu?.menuName) return currentMenu.menuName;
+    if (currentMenu?.pageName) return currentMenu.pageName;
+    if (location.pathname.includes('/categories')) return 'Categories Master';
+    return 'Admin Panel';
   };
 
   const handleLogout = async () => {

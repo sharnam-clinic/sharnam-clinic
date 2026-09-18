@@ -14,10 +14,11 @@ const ProtectedLayout = () => {
 
   // Default fallback menus for demo / overview when database is not connected
   const defaultAdminMenus = [
-    { id: 1, menuName: 'Dashboard', listPageRoute: '/admin', icon: 'LayoutDashboard', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
+    { id: 8, menuName: 'Categories', listPageRoute: '/admin/categories', formPageRoute: '/admin/categories/new', icon: 'Tags', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
     { id: 2, menuName: 'Clinic Photos', listPageRoute: '/admin/clinic-photos', icon: 'Image', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
     { id: 3, menuName: 'Services', listPageRoute: '/admin/services', icon: 'Activity', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
     { id: 4, menuName: 'Health Conditions', listPageRoute: '/admin/health-conditions', icon: 'Stethoscope', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
+    { id: 9, menuName: 'Patient Inquiries', listPageRoute: '/admin/inquiries', icon: 'Inbox', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
     { id: 5, menuName: 'Users Master', listPageRoute: '/admin/users', icon: 'Users', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
     { id: 6, menuName: 'User Types', listPageRoute: '/admin/user-types', icon: 'Shield', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
     { id: 7, menuName: 'Role Permissions', listPageRoute: '/admin/role-permission', icon: 'Key', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
@@ -28,7 +29,10 @@ const ProtectedLayout = () => {
       try {
         const response = await api.get('/menus/my-menus');
         if (response.data?.status && response.data.result?.length > 0) {
-          setMenus(response.data.result);
+          const filtered = response.data.result.filter(
+            (m) => m.menuName?.toLowerCase() !== 'dashboard' && m.listPageRoute !== '/admin'
+          );
+          setMenus(filtered);
         } else {
           setMenus(defaultAdminMenus);
         }
@@ -58,6 +62,20 @@ const ProtectedLayout = () => {
     // If running in mock / overview mode, always grant full access
     if (token === 'mock-admin-token-sharnam-demo') return true;
     if (loadingMenus) return true; // Wait for menus to load
+
+    // Super Admin role always has full permission to all routes
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (
+        storedUser?.userType === 1 || 
+        Number(storedUser?.userType) === 1 || 
+        storedUser?.role === 'admin' || 
+        storedUser?.userTypeName === 'Super Admin'
+      ) {
+        return true;
+      }
+    } catch {}
+
     const currentPath = location.pathname;
     
     // Always allow the base admin dashboard
@@ -70,20 +88,20 @@ const ProtectedLayout = () => {
       
       if (currentPath.startsWith(menu.listPageRoute + '/')) {
         if (currentPath.includes('/new')) {
-          return menu.userPermission?.isWrite === 1;
+          return Number(menu.userPermission?.isWrite) === 1;
         }
         if (currentPath.includes('/edit')) {
-          return menu.userPermission?.isEdit === 1;
+          return Number(menu.userPermission?.isEdit) === 1;
         }
         return true;
       }
       
       if (menu.formPageRoute) {
         if (currentPath === menu.formPageRoute) {
-          return menu.userPermission?.isWrite === 1 || menu.userPermission?.isEdit === 1;
+          return Number(menu.userPermission?.isWrite) === 1 || Number(menu.userPermission?.isEdit) === 1;
         }
         if (currentPath.startsWith(menu.formPageRoute + '/')) {
-          return menu.userPermission?.isEdit === 1;
+          return Number(menu.userPermission?.isEdit) === 1;
         }
       }
       return false;

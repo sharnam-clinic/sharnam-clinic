@@ -1,0 +1,10 @@
+export { servicesController } from './servicesController';
+export { healthConditionsController } from './healthConditionsController';
+export { clinicPhotosController } from './clinicPhotosController';
+export { usersController } from './usersController';
+export { userTypesController } from './userTypesController';
+export { permissionsController } from './permissionsController';
+export { menusController } from './menusController';
+export { authController } from './authController';
+export { categoryController } from './categoryController';
+export { inquiriesController } from './inquiriesController';

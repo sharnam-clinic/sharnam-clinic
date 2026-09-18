@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model UserType {
+  id              BigInt           @id @default(autoincrement())
+  user_type       String           @unique @db.VarChar(100)
+  is_status       Int              @default(1) @db.SmallInt
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime         @default(now()) @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+  users           User[]
+
+  @@map("user_types")
+}
+
+model Menu {
+  id              BigInt           @id @default(autoincrement())
+  menuName        String           @map("menu_name") @db.VarChar(150)
+  listPageRoute   String           @map("list_page_route") @db.VarChar(255)
+  formPageRoute   String?          @map("form_page_route") @db.VarChar(255)
+  icon            String?          @db.VarChar(60)
+  sortOrder       Int              @default(0) @map("sort_order")
+  isStatus        Int              @default(1) @map("is_status") @db.SmallInt
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+
+  @@map("menus")
+}
+
+model RolePermission {
+  id         BigInt   @id @default(autoincrement())
+  userTypeId BigInt   @map("user_type_id")
+  menuId     BigInt   @map("menu_id")
+  isRead     Int      @default(1) @map("is_read") @db.SmallInt
+  isWrite    Int      @default(1) @map("is_write") @db.SmallInt
+  isEdit     Int      @default(1) @map("is_edit") @db.SmallInt
+  isDelete   Int      @default(1) @map("is_delete") @db.SmallInt
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  menu       Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  userType   UserType @relation(fields: [userTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([userTypeId, menuId], map: "unique_user_type_menu")
+  @@map("role_permissions")
+}
+
+model User {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  email      String    @unique @db.VarChar(255)
+  phone      String?   @db.VarChar(50)
+  password   String    @db.VarChar(255)
+  userTypeId BigInt?   @map("user_type_id")
+  isStatus   Int       @default(1) @map("is_status") @db.SmallInt
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  userType   UserType? @relation(fields: [userTypeId], references: [id], onUpdate: NoAction)
+
+  @@map("users")
+}
+
+model Service {
+  id             BigInt   @id @default(autoincrement())
+  name           String   @db.VarChar(255)
+  category       String   @db.VarChar(100)
+  icon           String?  @db.VarChar(100)
+  description    String?
+  whats_included Json     @default("[]")
+  approach       String?
+  sortOrder      Int      @default(0) @map("sort_order")
+  isStatus       Int      @default(1) @map("is_status") @db.SmallInt
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("services")
+}
+
+model HealthCondition {
+  id              BigInt   @id @default(autoincrement())
+  title           String   @db.VarChar(255)
+  category        String   @db.VarChar(100)
+  icon            String?  @db.VarChar(100)
+  short_summary   String?
+  symptoms        Json     @default("[]")
+  causes          Json     @default("[]")
+  prevention      Json     @default("[]")
+  whenToSeeDoctor String?  @map("when_to_see_doctor")
+  sortOrder       Int      @default(0) @map("sort_order")
+  isStatus        Int      @default(1) @map("is_status") @db.SmallInt
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("health_conditions")
+}
+
+model ClinicPhoto {
+  id          BigInt   @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String?
+  imageUrl    String   @map("image_url")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isStatus    Int      @default(1) @map("is_status") @db.SmallInt
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("clinic_photos")
+}
+
+model Category {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  slug        String   @unique @db.VarChar(100)
+  icon        String?  @db.VarChar(100)
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  isStatus    Int      @default(1) @map("is_status") @db.SmallInt
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("categories")
+}
+
+model Inquiry {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  phone     String   @db.VarChar(50)
+  email     String?  @db.VarChar(255)
+  subject   String   @default("General Inquiry") @db.VarChar(255)
+  message   String   @db.Text
+  isRead    Int      @default(0) @map("is_read") @db.SmallInt
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("inquiries")
+}
