@@ -89,8 +89,8 @@ const HealthConditionForm = () => {
           c.name.toLowerCase() === formData.category.toLowerCase() ||
           c.slug?.toLowerCase() === formData.category.toLowerCase()
       );
-      if (match && formData.category !== match.name) {
-        setFormData((prev) => ({ ...prev, category: match.name }));
+      if (match && formData.category !== match.slug) {
+        setFormData((prev) => ({ ...prev, category: match.slug }));
       }
     }
   }, [categories, formData.category]);
@@ -212,7 +212,7 @@ const HealthConditionForm = () => {
               >
                 <option value="">Select Category</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
+                  <option key={cat.id} value={cat.slug}>
                     {cat.name}
                   </option>
                 ))}

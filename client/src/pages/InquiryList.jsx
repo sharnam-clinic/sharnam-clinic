@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
+import ConfirmModal from '../components/ConfirmModal';
 import DataTable from '../components/DataTable';
 
 const InquiryList = () => {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   const fetchInquiries = async () => {
     try {
@@ -44,21 +46,28 @@ const InquiryList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this patient inquiry?')) {
-      try {
-        await api.delete(`/inquiries/${id}`);
-        toast.success('Inquiry deleted successfully');
-        setInquiries((prev) => prev.filter((item) => item.id !== id));
-        if (selectedInquiry?.id === id) {
-          setSelectedInquiry(null);
-        }
-      } catch (err) {
-        console.error('Failed to delete inquiry', err);
-        toast.error('Failed to delete inquiry');
+  
+  const handleDeleteClick = (id) => {
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/inquiries/${id}`);
+      toast.success('Inquiry deleted successfully');
+      setInquiries((prev) => prev.filter((item) => item.id !== id));
+      if (selectedInquiry?.id === id) {
+        setSelectedInquiry(null);
       }
+    } catch (err) {
+      console.error('Failed to delete inquiry', err);
+      toast.error('Failed to delete inquiry');
     }
   };
+
 
   const handleOpenDetail = (row) => {
     setSelectedInquiry(row);
@@ -194,7 +203,7 @@ const InquiryList = () => {
             {row.isRead === 1 ? <Icons.Mail size={16} /> : <Icons.MailOpen size={16} />}
           </button>
           <button
-            onClick={() => handleDelete(row.id)}
+            onClick={() => handleDeleteClick(row.id)}
             className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
             title="Delete Inquiry"
           >
@@ -340,8 +349,17 @@ const InquiryList = () => {
           </div>
         </div>
       )}
+    
+      <ConfirmModal 
+        isOpen={deleteModal.isOpen} 
+        onClose={() => setDeleteModal({ isOpen: false, id: null })} 
+        onConfirm={confirmDelete}
+        title="Delete Patient Inquiry"
+        message="Are you sure you want to permanently delete this inquiry? This action cannot be undone."
+      />
     </div>
   );
 };
 
 export default InquiryList;
+

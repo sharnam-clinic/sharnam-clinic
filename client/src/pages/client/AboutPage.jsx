@@ -3,27 +3,9 @@ import { Link } from 'react-router-dom';
 import BusinessCard from '../../components/client/BusinessCard';
 import api from '../../utils/api';
 
-const DEFAULT_PHOTOS = [
-  {
-    url: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80',
-    title: 'Consultation Room',
-    desc: 'Private, comfortable setting for detailed constitutional case-taking.',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80',
-    title: 'Reception & Waiting Lounge',
-    desc: 'Warm and serene atmosphere designed for patient peace of mind.',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
-    title: 'Homeopathic Pharmacy',
-    desc: 'Authentic high-potency remedies prepared under strict hygiene standards.',
-  },
-];
-
 const AboutPage = () => {
   const pageRef = useRef(null);
-  const [photos, setPhotos] = useState(DEFAULT_PHOTOS);
+  const [photos, setPhotos] = useState([]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -91,12 +73,7 @@ const AboutPage = () => {
     },
   ];
 
-  const clinicStats = [
-    { number: '10+', label: 'Years of Clinical Practice' },
-    { number: '5,000+', label: 'Satisfied Patients Healed' },
-    { number: '98%', label: 'Positive Health Outcomes' },
-    { number: '15+', label: 'Condition Specialties' },
-  ];
+  
 
   return (
     <div ref={pageRef} className="bg-[#faf7f5] pb-20 text-[#1f2937]">
@@ -234,23 +211,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* 4. Clinic Stats */}
-      <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="bg-gradient-to-r from-[#2c7a94] to-[#1e576b] text-white rounded-[24px] sm:rounded-[32px] p-6 sm:p-10 md:p-14 shadow-xl reveal">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 text-center">
-            {clinicStats.map((stat) => (
-              <div key={stat.label} className="space-y-2">
-                <span className="font-['Playfair_Display'] text-[40px] sm:text-[52px] font-bold block leading-none">
-                  {stat.number}
-                </span>
-                <span className="font-['Inter'] text-[14px] sm:text-[15px] text-white/90 font-medium block">
-                  {stat.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* 5. Clinic Photos (Loaded Dynamically from Admin Clinic Photos Table) */}
       <section className="py-16 max-w-7xl mx-auto px-6">

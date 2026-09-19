@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
-import { Download, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { Download, Search, ChevronUp, ChevronDown, Database } from 'lucide-react';
 
 const DataTable = ({ columns, data, exportFileName = 'data_export' }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -113,11 +113,15 @@ const DataTable = ({ columns, data, exportFileName = 'data_export' }) => {
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-400 text-sm">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <span className="text-3xl">📂</span>
-                    <p className="font-semibold text-gray-700">No records found</p>
-                    <p className="text-xs text-gray-400">Add a new record or adjust your search term.</p>
+                <td colSpan={columns.length} className="px-6 py-24 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-gray-50/80 border border-gray-100 rounded-2xl flex items-center justify-center mb-4 shadow-sm ring-4 ring-gray-50/50">
+                      <Database className="text-gray-400" size={28} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-[15px] font-bold text-gray-800 tracking-tight mb-1">No records found</h3>
+                    <p className="text-[13px] text-gray-500 max-w-[250px] leading-relaxed">
+                      We couldn't find any data matching your current filters or search term.
+                    </p>
                   </div>
                 </td>
               </tr>

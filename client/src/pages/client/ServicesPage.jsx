@@ -2,103 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 
-const DEFAULT_SERVICES = [
-  {
-    id: 1,
-    category: 'skin',
-    icon: 'dermatology',
-    name: 'Skin & Hair Care Therapy',
-    description: 'Comprehensive homeopathic treatment for chronic skin conditions, scalp ailments, and allergic dermatitis without steroid creams.',
-    whatsIncluded: [
-      'Adult & Teenage Acne / Pimples Treatment',
-      'Eczema & Atopic Dermatitis Relief',
-      'Psoriasis & Scalp Flaking Management',
-      'Urticaria & Skin Allergy Care',
-      'Hair Loss, Alopecia & Dandruff Control',
-    ],
-    approach: 'Addresses internal hormonal imbalance and immune sensitivity to achieve long-lasting clear skin.',
-  },
-  {
-    id: 2,
-    category: 'respiratory',
-    icon: 'air',
-    name: 'Respiratory & ENT Care',
-    description: 'Strengthening natural lung immunity and nasal defense to prevent recurring seasonal allergies, sinus pressure, and wheezing.',
-    whatsIncluded: [
-      'Chronic Allergic Rhinitis & Frequent Sneezing',
-      'Sinusitis & Nasal Blockage Relief',
-      'Bronchial Asthma & Wheezing Management',
-      'Recurrent Tonsillitis & Throat Infections',
-      'Dust & Pollen Allergy Immunomodulation',
-    ],
-    approach: 'Desensitizes the respiratory system naturally so seasonal changes no longer trigger severe flare-ups.',
-  },
-  {
-    id: 3,
-    category: 'digestive',
-    icon: 'stomach',
-    name: 'Digestive & Gastric Wellness',
-    description: 'Gentle, natural solutions for chronic acidity, reflux, IBS, and sluggish digestion to restore gut health and gut microbiome balance.',
-    whatsIncluded: [
-      'GERD, Heartburn & Chronic Acidity',
-      'Irritable Bowel Syndrome (IBS)',
-      'Chronic Constipation & Bloating',
-      'Gastritis & Stomach Ulcer Recovery',
-      'Indigestion & Food Intolerance Care',
-    ],
-    approach: 'Normalizes stomach acid production and gut motility while reducing stress-induced gastric distress.',
-  },
-  {
-    id: 4,
-    category: 'women',
-    icon: 'female',
-    name: 'Women’s & Hormonal Health',
-    description: 'Holistic care for female endocrine health, menstrual irregularities, PCOS, and menopausal transitions.',
-    whatsIncluded: [
-      'PCOS / PCOD & Ovarian Cysts',
-      'Irregular & Painful Menstrual Cycles',
-      'Menopausal Hot Flashes & Mood Swings',
-      'Hormonal Acne & Weight Gain',
-      'Fibroids & Premenstrual Syndrome (PMS)',
-    ],
-    approach: 'Restores natural endocrine rhythm without synthetic hormone replacement therapy.',
-  },
-  {
-    id: 5,
-    category: 'chronic',
-    icon: 'joint',
-    name: 'Joint & Chronic Pain Management',
-    description: 'Natural pain relief and anti-inflammatory homeopathic care for joint stiffness, arthritis, and backache.',
-    whatsIncluded: [
-      'Rheumatoid & Osteoarthritis Relief',
-      'Cervical & Lumbar Spondylosis',
-      'Gout & Uric Acid Management',
-      'Sciatica & Lower Back Pain',
-      'Fibromyalgia & Muscle Stiffness',
-    ],
-    approach: 'Reduces joint swelling and morning stiffness while promoting cartilage health and mobility.',
-  },
-  {
-    id: 6,
-    category: 'pediatric',
-    icon: 'child_care',
-    name: 'Pediatric & Child Health',
-    description: 'Ultra-gentle, sweet homeopathic pills designed for babies, toddlers, and young children to boost natural immunity.',
-    whatsIncluded: [
-      'Recurrent Cold, Cough & Fever in Children',
-      'Childhood Asthma & Allergic Cough',
-      'Poor Appetite & Digestive Troubles',
-      'Teething Complaints & Bedwetting',
-      'Immunity Enhancement for School-Going Children',
-    ],
-    approach: 'Zero chemical burden, safe for infants, and highly effective for developing immune systems.',
-  },
-];
-
 const ServicesPage = () => {
   const pageRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState('all');
-  const [services, setServices] = useState(DEFAULT_SERVICES);
+  const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 

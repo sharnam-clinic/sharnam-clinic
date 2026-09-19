@@ -2,122 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 
-const DEFAULT_CONDITIONS = [
-  {
-    id: 1,
-    title: 'Acne Vulgaris & Pimples',
-    category: 'skin',
-    icon: 'dermatology',
-    shortSummary: 'Inflammatory skin condition affecting oil glands and hair follicles.',
-    symptoms: [
-      'Blackheads, whiteheads, and painful red papules on face and back',
-      'Pustules with visible pus at center',
-      'Deep, tender cystic nodules causing long-term scarring',
-      'Oily skin complexion and clogged facial pores',
-    ],
-    causes: [
-      'Hormonal fluctuations during adolescence, PCOS, or stress',
-      'Overproduction of sebum (skin oil) by androgen hormones',
-      'Bacterial colonization (Cutibacterium acnes) in blocked pores',
-      'Excessive consumption of high-glycemic or greasy foods',
-    ],
-    prevention: [
-      'Wash face twice daily with mild non-comedogenic cleanser',
-      'Avoid picking or squeezing acne lesions to prevent scars',
-      'Maintain balanced hydration and limit processed dairy/sugar',
-      'Clean pillowcases and cell phone screens frequently',
-    ],
-    whenToSeeDoctor:
-      'Seek consultation if acne causes emotional distress, painful cystic nodules, or deep pitting scars unresponsive to OTC cleansers.',
-  },
-  {
-    id: 2,
-    title: 'Eczema & Atopic Dermatitis',
-    category: 'skin',
-    icon: 'wash',
-    shortSummary: 'Chronic inflammatory skin condition causing itchy, inflamed, and dry patches.',
-    symptoms: [
-      'Intense itching, often worse at night',
-      'Dry, red to brownish-gray patches on skin folds (elbows, knees, neck)',
-      'Small, raised bumps that may leak fluid and crust over',
-      'Thickened, cracked, or scaly skin texture',
-    ],
-    causes: [
-      'Genetic immune system hypersensitivity',
-      'Skin barrier defect allowing moisture out and irritants in',
-      'Environmental triggers like harsh detergents, synthetic fabrics, dust mites',
-      'Cold dry weather or excessive sweating',
-    ],
-    prevention: [
-      'Moisturize skin liberally twice daily immediately after bathing',
-      'Take lukewarm baths and avoid harsh antibacterial soaps',
-      'Wear soft, breathable 100% cotton clothing',
-      'Use a room humidifier during cold, dry seasons',
-    ],
-    whenToSeeDoctor:
-      'Consult if itching severely disturbs sleep, skin shows signs of infection (yellow oozing pus), or flare-ups spread rapidly.',
-  },
-  {
-    id: 3,
-    title: 'Bronchial Asthma & Wheezing',
-    category: 'respiratory',
-    icon: 'air',
-    shortSummary: 'Chronic airway inflammation causing periodic breathing difficulty and chest constriction.',
-    symptoms: [
-      'Shortness of breath and difficulty exhaling completely',
-      'Audible whistling or wheezing sound when breathing out',
-      'Frequent coughing episodes, particularly at night or early morning',
-      'Tightness, stiffness, or pain across the chest cage',
-    ],
-    causes: [
-      'Airborne allergens including dust mites, pollens, pet hair, mold spores',
-      'Cold air inhalation or sudden atmospheric temperature shifts',
-      'Respiratory viral infections such as colds and flu',
-      'Physical exertion without gradual respiratory warmup',
-    ],
-    prevention: [
-      'Identify and maintain strict distance from individual asthma triggers',
-      'Wash bed linen in hot water weekly to minimize dust mites',
-      'Wear a protective mask during high pollen or industrial pollution days',
-      'Keep indoor living areas clean and well-ventilated',
-    ],
-    whenToSeeDoctor:
-      'Consult a physician if wheezing worsens progressively, inhaler relief diminishes, or speech is hindered by shortness of breath.',
-  },
-  {
-    id: 4,
-    title: 'Acid Reflux & GERD',
-    category: 'digestive',
-    icon: 'stomach',
-    shortSummary: 'Stomach acid backing up into the esophagus causing irritation and burning.',
-    symptoms: [
-      'Burning sensation in the chest (heartburn) usually after eating',
-      'Sour liquid or food regurgitation into the back of throat',
-      'Persistent dry cough, hoarseness, or throat irritation',
-      'Upper abdominal discomfort and sensation of a lump in throat',
-    ],
-    causes: [
-      'Weakening or transient relaxation of lower esophageal sphincter (LES)',
-      'Hiatal hernia or sluggish gastric emptying',
-      'Frequent consumption of fried, spicy, acidic, or fatty foods',
-      'Lying down immediately after eating heavy meals',
-    ],
-    prevention: [
-      'Eat smaller, frequent meals instead of heavy dinners',
-      'Avoid lying down or sleeping within 2-3 hours of eating',
-      'Elevate the head of your bed by 6 inches',
-      'Limit caffeine, carbonated drinks, and spicy late-night snacks',
-    ],
-    whenToSeeDoctor:
-      'Consult if acid reflux occurs more than twice a week or causes difficulty swallowing and dark stools.',
-  },
-];
-
 const HealthInfoPage = () => {
   const pageRef = useRef(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [conditions, setConditions] = useState(DEFAULT_CONDITIONS);
+  const [conditions, setConditions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -196,7 +85,8 @@ const HealthInfoPage = () => {
     const matchesCategory =
       selectedCategory === 'all' ||
       item.category === selectedCategory ||
-      item.category?.toLowerCase() === selectedCategory.toLowerCase();
+      item.category?.toLowerCase() === selectedCategory.toLowerCase() ||
+      item.category?.toLowerCase().includes(selectedCategory.toLowerCase());
 
     const q = searchQuery.toLowerCase().trim();
     if (!q) return matchesCategory;

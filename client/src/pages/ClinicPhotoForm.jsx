@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
+import { supabase } from '../utils/supabase';
 
 const ClinicPhotoForm = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const ClinicPhotoForm = () => {
     isStatus: 1,
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -36,6 +38,45 @@ const ClinicPhotoForm = () => {
       setError('Failed to fetch clinic photo');
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check if file size exceeds 100KB (100 * 1024 bytes)
+    if (file.size > 100 * 1024) {
+      toast.error('Image size must be less than 100KB');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError('');
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = Math.random().toString(36).substring(2) + '_' + Date.now() + '.' + fileExt;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+      
+      setFormData((prev) => ({ ...prev, imageUrl: data.publicUrl }));
+      toast.success('Image uploaded successfully!');
+    } catch (err) {
+      console.error(err);
+      setError('Error uploading image: ' + err.message);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -131,21 +172,30 @@ const ClinicPhotoForm = () => {
             </div>
           </div>
 
-          {/* Image URL */}
+          
+          {/* Image File Upload */}
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
-              Image URL <span className="text-red-500">*</span>
+              Upload Image <span className="text-red-500">*</span> <span className="text-[10px] text-gray-400 lowercase normal-case">(Max 100KB)</span>
             </label>
-            <input
-              type="url"
-              name="imageUrl"
-              required
-              value={formData.imageUrl}
-              onChange={handleChange}
-              className="w-full bg-gray-50/60 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#cc3b38] focus:bg-white focus:ring-2 focus:ring-[#cc3b38]/10 transition-all"
-              placeholder="https://images.unsplash.com/photo-... or /assets/..."
-            />
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#fcebeb] file:text-[#cc3b38] hover:file:bg-[#fbdada] transition-all cursor-pointer"
+              />
+              {uploading && <Icons.Loader2 size={20} className="animate-spin text-[#cc3b38]" />}
+            </div>
+            {formData.imageUrl && (
+              <p className="text-[11px] text-green-600 font-semibold mt-1">
+                ✓ Image successfully attached.
+              </p>
+            )}
           </div>
+
+
 
           {/* Image Preview */}
           {formData.imageUrl && (

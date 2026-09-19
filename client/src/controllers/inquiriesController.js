@@ -97,12 +97,10 @@ export const inquiriesController = {
 
   async markAsRead(id, isRead = 1) {
     try {
-      const { error } = await supabase
+      await supabase
         .from('inquiries')
         .update({ is_read: isRead })
         .eq('id', parseInt(id, 10));
-
-      if (!error) return { id, isRead };
     } catch {}
 
     const local = getLocalInquiries();
@@ -116,14 +114,13 @@ export const inquiriesController = {
 
   async delete(id) {
     try {
-      const { error } = await supabase
+      await supabase
         .from('inquiries')
         .delete()
         .eq('id', parseInt(id, 10));
-
-      if (!error) return { id, deleted: true };
     } catch {}
 
+    // Always delete from local storage as well, since Supabase doesn't error on 0 rows affected
     const local = getLocalInquiries();
     const filtered = local.filter((i) => String(i.id) !== String(id));
     saveLocalInquiries(filtered);

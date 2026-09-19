@@ -99,15 +99,12 @@ const HomePage = () => {
             </div>
 
             {/* Quick Trust Badges */}
-            <div className="pt-5 border-t border-gray-200/80 grid grid-cols-3 gap-2 sm:gap-4 font-['Inter'] text-center sm:text-left">
+            <div className="pt-5 border-t border-gray-200/80 grid grid-cols-2 gap-2 sm:gap-4 font-['Inter'] text-center sm:text-left">
               <div>
-                <span className="block text-[18px] sm:text-[22px] font-bold text-[#1f2937]">10+ Years</span>
+                <span className="block text-[18px] sm:text-[22px] font-bold text-[#1f2937]">5 Years+</span>
                 <span className="text-[11px] sm:text-[13px] text-[#6b7280]">Experience</span>
               </div>
-              <div>
-                <span className="block text-[18px] sm:text-[22px] font-bold text-[#cc3b38]">5,000+</span>
-                <span className="text-[11px] sm:text-[13px] text-[#6b7280]">Patients</span>
-              </div>
+              
               <div>
                 <span className="block text-[18px] sm:text-[22px] font-bold text-[#2c7a94]">100% Safe</span>
                 <span className="text-[11px] sm:text-[13px] text-[#6b7280]">Remedies</span>
