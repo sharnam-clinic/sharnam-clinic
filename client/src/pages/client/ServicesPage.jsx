@@ -70,11 +70,11 @@ const ServicesPage = () => {
   const filteredServices =
     activeCategory === 'all'
       ? services
-      : services.filter(
-          (s) =>
-            s.category === activeCategory ||
-            s.category?.toLowerCase() === activeCategory.toLowerCase()
-        );
+      : services.filter((s) => {
+          const sCat = (s.category || '').toLowerCase().replace(/[-_]/g, ' ').trim();
+          const aCat = activeCategory.toLowerCase().replace(/[-_]/g, ' ').trim();
+          return sCat === aCat || sCat.includes(aCat) || aCat.includes(sCat);
+        });
 
   return (
     <div ref={pageRef} className="bg-[#faf7f5] pb-20 text-[#1f2937]">
