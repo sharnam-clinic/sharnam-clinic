@@ -4,7 +4,7 @@
   "description": "Sharanam Clinic Backend API",
   "main": "src/server.js",
   "scripts": {
-    "start": "nodemon src/server.js",
+    "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "build": "npx prisma generate"
   },
