@@ -21,6 +21,8 @@ api.interceptors.request.use(
   }
 );
 
+let isRedirecting = false;
+
 // Add a response interceptor to handle unauthorized errors globally
 api.interceptors.response.use(
   (response) => response,
@@ -28,12 +30,10 @@ api.interceptors.response.use(
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
-      const publicRoutes = ['/', '/login', '/about', '/contact', '/experts', '/specialities'];
-      const isPublicRoute = publicRoutes.some(
-        (route) => window.location.pathname === route || window.location.pathname.startsWith(route + '/')
-      );
-      if (!isPublicRoute) {
-        window.location.href = '/login';
+      
+      if (window.location.pathname.startsWith('/admin') && !isRedirecting) {
+        isRedirecting = true;
+        window.location.replace('/login');
       }
     }
     return Promise.reject(error);
