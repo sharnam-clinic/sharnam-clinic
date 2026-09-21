@@ -13,7 +13,7 @@ import {
 } from '../controllers';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
-
+console.log("base url",baseURL)
 const axiosInstance = axios.create({
   baseURL: baseURL || '',
   headers: {
