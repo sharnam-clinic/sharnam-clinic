@@ -126,13 +126,7 @@ const UserList = () => {
     }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[300px] text-gray-400 text-sm">
-        Loading users...
-      </div>
-    );
-  }
+
 
   return (
     <div className="space-y-6">
@@ -152,7 +146,7 @@ const UserList = () => {
         )}
       </div>
 
-      <DataTable columns={columns} data={users} exportFileName="Sharnam_Users" />
+      <DataTable columns={columns} data={users} loading={loading} exportFileName="Sharnam_Users" />
     </div>
   );
 };

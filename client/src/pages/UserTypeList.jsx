@@ -143,13 +143,7 @@ const UserTypeList = () => {
     }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[300px] text-gray-400 text-sm">
-        Loading user types...
-      </div>
-    );
-  }
+
 
   return (
     <div className="space-y-6">
@@ -169,7 +163,7 @@ const UserTypeList = () => {
         )}
       </div>
 
-      <DataTable columns={columns} data={userTypes} exportFileName="Sharnam_UserTypes" />
+      <DataTable columns={columns} data={userTypes} loading={loading} exportFileName="Sharnam_UserTypes" />
     </div>
   );
 };

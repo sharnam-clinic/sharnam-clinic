@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
-import { Download, Search, ChevronUp, ChevronDown, Database } from 'lucide-react';
+import { Download, Search, ChevronUp, ChevronDown, Database, Loader2 } from 'lucide-react';
 
-const DataTable = ({ columns, data, exportFileName = 'data_export' }) => {
+const DataTable = ({ columns, data, loading = false, exportFileName = 'data_export' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
@@ -101,7 +101,19 @@ const DataTable = ({ columns, data, exportFileName = 'data_export' }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filteredAndSortedData.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-24 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <Loader2 className="w-10 h-10 animate-spin text-[#cc3b38] mb-4" strokeWidth={2} />
+                    <h3 className="text-[15px] font-bold text-gray-800 tracking-tight mb-1">Loading data...</h3>
+                    <p className="text-[13px] text-gray-500 max-w-[250px] leading-relaxed">
+                      Please wait while we fetch the records.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredAndSortedData.length > 0 ? (
               filteredAndSortedData.map((row, rowIndex) => (
                 <tr key={rowIndex} className="hover:bg-gray-50/60 transition-colors">
                   {columns.map((col) => (
