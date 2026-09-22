@@ -35,7 +35,9 @@ const Sidebar = ({ isOpen, toggleSidebar, menus = [] }) => {
 
   const renderMenuItem = (item) => {
     const path = item.listPageRoute || '#';
-    const isActive = location.pathname === path || location.pathname.startsWith(path + '/');
+    const isActive = path === '/admin' 
+      ? location.pathname === '/admin' || location.pathname === '/admin/'
+      : location.pathname === path || location.pathname.startsWith(path + '/');
 
     return (
       <Link
@@ -96,6 +98,17 @@ const Sidebar = ({ isOpen, toggleSidebar, menus = [] }) => {
 
         {/* Navigation List with Two Grouped Sections */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-6">
+          
+          {/* Main Dashboard Link */}
+          <div className="space-y-1">
+            {renderMenuItem({
+              id: 'dashboard-home',
+              listPageRoute: '/admin',
+              menuName: 'Welcome Screen',
+              icon: 'LayoutDashboard'
+            })}
+          </div>
+
           {/* Section 1: Clinic Management */}
           {clinicMenus.length > 0 && (
             <div className="space-y-1">
