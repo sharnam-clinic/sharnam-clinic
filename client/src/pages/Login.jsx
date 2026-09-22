@@ -30,21 +30,6 @@ const Login = () => {
         return;
       }
     } catch (err) {
-      // Fallback bypass for default admin if database is not yet migrated or offline
-      if (email === 'admin@gmail.com' && password === '123456') {
-        const mockUser = {
-          id: 1,
-          name: 'Clinic Administrator',
-          email: 'admin@gmail.com',
-          role: 'admin',
-          userType: 1,
-          userTypeName: 'Super Admin',
-        };
-        localStorage.setItem('accessToken', 'mock-admin-token-sharnam-demo');
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        navigate('/admin');
-        return;
-      }
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
     } finally {
       setLoading(false);

@@ -34,14 +34,8 @@ const RolePermissionForm = () => {
         // Fetch all active User Types
         const utRes = await api.get('/user-types');
         let availableUT = [];
-        if (utRes.data.status && utRes.data.result?.length > 0) {
+        if (utRes.data.status && utRes.data.result) {
           availableUT = utRes.data.result;
-        } else {
-          availableUT = [
-            { id: 1, userType: 'Super Admin' },
-            { id: 2, userType: 'Clinic Staff' },
-            { id: 3, userType: 'Doctor' },
-          ];
         }
         setUserTypes(availableUT);
         
@@ -59,25 +53,20 @@ const RolePermissionForm = () => {
         setMenus(activeMenus);
         const initialPerms = {};
         activeMenus.forEach(m => {
-          initialPerms[m.id] = { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 };
+          initialPerms[m.id] = { isRead: 0, isWrite: 0, isEdit: 0, isDelete: 0 };
         });
         setPermissions(initialPerms);
         
       } catch (err) {
-        console.warn('Backend offline, loading default role permissions setup');
-        const fallbackUT = [
-          { id: 1, userType: 'Super Admin' },
-          { id: 2, userType: 'Clinic Staff' },
-          { id: 3, userType: 'Doctor' },
-        ];
-        setUserTypes(fallbackUT);
+        console.warn('Backend offline or error fetching user types', err.message);
+        setUserTypes([]);
         if (!userTypeId) {
-          setSelectedUserTypeId(1);
+          setSelectedUserTypeId('');
         }
         setMenus(defaultModules);
         const initialPerms = {};
         defaultModules.forEach(m => {
-          initialPerms[m.id] = { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 };
+          initialPerms[m.id] = { isRead: 0, isWrite: 0, isEdit: 0, isDelete: 0 };
         });
         setPermissions(initialPerms);
       } finally {
@@ -90,34 +79,43 @@ const RolePermissionForm = () => {
 
   // Fetch permissions when a UserType is selected
   useEffect(() => {
-    if (!selectedUserTypeId) return;
+    if (!selectedUserTypeId || menus.length === 0) return;
     
     const fetchPermissions = async () => {
       try {
+        // Start with a clean slate of 0s for all menus
+        const cleanPerms = {};
+        menus.forEach(m => {
+          cleanPerms[m.id] = { isRead: 0, isWrite: 0, isEdit: 0, isDelete: 0 };
+        });
+
         const res = await api.get(`/permissions/${selectedUserTypeId}`);
         if (res.data.status && res.data.result?.length > 0) {
-          setPermissions(prev => {
-            const updated = { ...prev };
-            res.data.result.forEach(p => {
-              if (updated[p.menuId]) {
-                updated[p.menuId] = {
-                  isRead: p.isRead,
-                  isWrite: p.isWrite,
-                  isEdit: p.isEdit,
-                  isDelete: p.isDelete
-                };
-              }
-            });
-            return updated;
+          res.data.result.forEach(p => {
+            if (cleanPerms[p.menuId]) {
+              cleanPerms[p.menuId] = {
+                isRead: p.isRead,
+                isWrite: p.isWrite,
+                isEdit: p.isEdit,
+                isDelete: p.isDelete
+              };
+            }
           });
         }
+        
+        setPermissions(cleanPerms);
       } catch (err) {
-        console.warn('Using existing state permissions for role', err.message);
+        console.warn('Failed to fetch permissions for role', err.message);
+        const cleanPerms = {};
+        menus.forEach(m => {
+          cleanPerms[m.id] = { isRead: 0, isWrite: 0, isEdit: 0, isDelete: 0 };
+        });
+        setPermissions(cleanPerms);
       }
     };
     
     fetchPermissions();
-  }, [selectedUserTypeId]);
+  }, [selectedUserTypeId, menus]);
 
   const handleUserTypeChange = (e) => {
     const val = e.target.value;

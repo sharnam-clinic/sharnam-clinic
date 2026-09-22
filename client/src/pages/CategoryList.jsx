@@ -4,11 +4,13 @@ import * as Icons from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
+import ConfirmModal from '../components/ConfirmModal';
 
 const CategoryList = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   // Extract permissions from ProtectedLayout outlet context
   const outlet = useOutletContext() || {};
@@ -57,20 +59,27 @@ const CategoryList = () => {
     fetchCategories();
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
     if (!permissions.isDelete) {
       toast.error('You do not have permission to delete categories.');
       return;
     }
-    if (window.confirm('Are you sure you want to delete this category? Services or Conditions under it may need reassignment.')) {
-      try {
-        await api.delete(`/categories/${id}`);
-        toast.success('Category deleted successfully');
-        fetchCategories();
-      } catch (err) {
-        console.error('Failed to delete category', err);
-        toast.error(err.response?.data?.message || 'Failed to delete category');
-      }
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/categories/${id}`);
+      toast.success('Category deleted successfully');
+      fetchCategories();
+    } catch (err) {
+      console.error('Failed to delete category', err);
+      toast.error(err.response?.data?.message || 'Failed to delete category');
+    } finally {
+      setDeleteModal({ isOpen: false, id: null });
     }
   };
 
@@ -123,7 +132,7 @@ const CategoryList = () => {
             )}
             {canDelete && (
               <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDeleteClick(row.id)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete Category"
               >
@@ -163,6 +172,15 @@ const CategoryList = () => {
         data={categories}
         loading={loading}
         exportFileName="categories_export"
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Category"
+        message="Are you sure you want to delete this category? Services or Conditions under it may need reassignment. This action cannot be undone."
       />
     </div>
   );

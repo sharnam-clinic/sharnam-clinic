@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
+import ConfirmModal from '../components/ConfirmModal';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -12,6 +13,7 @@ const UserList = () => {
   const location = useLocation();
   const currentMenu = menus.find(m => m.listPageRoute === location.pathname) || {};
   const permissions = currentMenu.userPermission || { isWrite: 0, isEdit: 0, isDelete: 0 };
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   const fetchUsers = async () => {
     try {
@@ -30,36 +32,24 @@ const UserList = () => {
     fetchUsers();
   }, []);
 
-  const handleDelete = (id) => {
-    toast((t) => (
-      <div className="flex flex-col gap-xs">
-        <p className="font-body-md m-0">Are you sure you want to delete this user?</p>
-        <div className="flex gap-sm justify-end mt-2">
-          <button
-            className="px-md py-xs bg-error text-on-error rounded-md text-sm font-label-md"
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                await api.delete(`/users/${id}`);
-                fetchUsers();
-                toast.success('Deleted successfully');
-              } catch (error) {
-                console.error('Failed to delete user', error);
-                toast.error(error.response?.data?.message || 'Error deleting user');
-              }
-            }}
-          >
-            Delete
-          </button>
-          <button
-            className="px-md py-xs bg-[#444] rounded-md text-sm text-white font-label-md"
-            onClick={() => toast.dismiss(t.id)}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ), { duration: Infinity });
+  const handleDeleteClick = (id) => {
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/users/${id}`);
+      fetchUsers();
+      toast.success('User deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete user', error);
+      toast.error(error.response?.data?.message || 'Error deleting user');
+    } finally {
+      setDeleteModal({ isOpen: false, id: null });
+    }
   };
 
   const columns = [
@@ -113,7 +103,7 @@ const UserList = () => {
             )}
             {canDelete && (
               <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDeleteClick(row.id)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete User"
               >
@@ -125,8 +115,6 @@ const UserList = () => {
       }
     }
   ];
-
-
 
   return (
     <div className="space-y-6">
@@ -147,6 +135,15 @@ const UserList = () => {
       </div>
 
       <DataTable columns={columns} data={users} loading={loading} exportFileName="Sharnam_Users" />
+      
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete User"
+        message="Are you sure you want to permanently delete this user? This action cannot be undone."
+      />
     </div>
   );
 };

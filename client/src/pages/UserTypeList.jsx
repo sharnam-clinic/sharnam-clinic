@@ -4,10 +4,12 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
+import ConfirmModal from '../components/ConfirmModal';
 
 const UserTypeList = () => {
   const [userTypes, setUserTypes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   const outlet = useOutletContext() || {};
   const layoutMenus = outlet.menus || [];
@@ -53,40 +55,28 @@ const UserTypeList = () => {
     fetchUserTypes();
   }, []);
 
-  const handleDelete = (id) => {
+  const handleDeleteClick = (id) => {
     if (!permissions.isDelete) {
       toast.error('You do not have permission to delete user types.');
       return;
     }
-    toast((t) => (
-      <div className="flex flex-col gap-xs">
-        <p className="font-body-md m-0">Are you sure you want to delete this User Type?</p>
-        <div className="flex gap-sm justify-end mt-2">
-          <button
-            className="px-md py-xs bg-error text-on-error rounded-md text-sm font-label-md"
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                await api.delete(`/user-types/${id}`);
-                fetchUserTypes();
-                toast.success('Deleted successfully');
-              } catch (error) {
-                console.error('Failed to delete user type', error);
-                toast.error(error.response?.data?.message || 'Error deleting user type');
-              }
-            }}
-          >
-            Delete
-          </button>
-          <button
-            className="px-md py-xs bg-[#444] rounded-md text-sm text-white font-label-md"
-            onClick={() => toast.dismiss(t.id)}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ), { duration: Infinity });
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/user-types/${id}`);
+      fetchUserTypes();
+      toast.success('User Type deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete user type', error);
+      toast.error(error.response?.data?.message || 'Error deleting user type');
+    } finally {
+      setDeleteModal({ isOpen: false, id: null });
+    }
   };
 
   const columns = [
@@ -130,7 +120,7 @@ const UserTypeList = () => {
             )}
             {canDelete && (
               <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDeleteClick(row.id)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete Role"
               >
@@ -142,8 +132,6 @@ const UserTypeList = () => {
       }
     }
   ];
-
-
 
   return (
     <div className="space-y-6">
@@ -164,6 +152,15 @@ const UserTypeList = () => {
       </div>
 
       <DataTable columns={columns} data={userTypes} loading={loading} exportFileName="Sharnam_UserTypes" />
+      
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete User Role"
+        message="Are you sure you want to permanently delete this user role? This action cannot be undone."
+      />
     </div>
   );
 };

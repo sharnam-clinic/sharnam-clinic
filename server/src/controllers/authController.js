@@ -4,14 +4,14 @@ const { sendSuccess, sendError } = require('../utils/responseHandler');
 
 const prisma = new PrismaClient();
 
-const generateAccessToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+const generateAccessToken = (userId, userTypeId) => {
+  return jwt.sign({ id: userId, userTypeId }, process.env.JWT_SECRET, {
     expiresIn: '15m',
   });
 };
 
-const generateRefreshToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, {
+const generateRefreshToken = (userId, userTypeId) => {
+  return jwt.sign({ id: userId, userTypeId }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: '7d',
   });
 };
@@ -46,8 +46,9 @@ exports.login = async (req, res) => {
     }
 
     const roleName = user.userType?.user_type || 'Administrator';
-    const accessToken = generateAccessToken(Number(user.id));
-    const refreshToken = generateRefreshToken(Number(user.id));
+    const userTypeIdNum = user.userTypeId ? Number(user.userTypeId) : 1;
+    const accessToken = generateAccessToken(Number(user.id), userTypeIdNum);
+    const refreshToken = generateRefreshToken(Number(user.id), userTypeIdNum);
 
     const userProfile = {
       id: Number(user.id),

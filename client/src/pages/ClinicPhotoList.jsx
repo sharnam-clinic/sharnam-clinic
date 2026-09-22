@@ -4,11 +4,13 @@ import * as Icons from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
+import ConfirmModal from '../components/ConfirmModal';
 
 const ClinicPhotoList = () => {
   const navigate = useNavigate();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   // Extract permissions from ProtectedLayout outlet context
   const outlet = useOutletContext() || {};
@@ -54,20 +56,27 @@ const ClinicPhotoList = () => {
     fetchPhotos();
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
     if (!permissions.isDelete) {
       toast.error('You do not have permission to delete photos.');
       return;
     }
-    if (window.confirm('Are you sure you want to delete this photo?')) {
-      try {
-        await api.delete(`/clinic-photos/${id}`);
-        toast.success('Photo deleted successfully');
-        fetchPhotos();
-      } catch (err) {
-        console.error('Failed to delete photo', err);
-        toast.error(err.response?.data?.message || 'Failed to delete photo');
-      }
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/clinic-photos/${id}`);
+      toast.success('Photo deleted successfully');
+      fetchPhotos();
+    } catch (err) {
+      console.error('Failed to delete photo', err);
+      toast.error(err.response?.data?.message || 'Failed to delete photo');
+    } finally {
+      setDeleteModal({ isOpen: false, id: null });
     }
   };
 
@@ -131,7 +140,7 @@ const ClinicPhotoList = () => {
             )}
             {canDelete && (
               <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDeleteClick(row.id)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete Photo"
               >
@@ -171,6 +180,15 @@ const ClinicPhotoList = () => {
         data={photos}
         loading={loading}
         exportFileName="clinic_photos_export"
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Photo"
+        message="Are you sure you want to permanently delete this photo? This action cannot be undone."
       />
     </div>
   );

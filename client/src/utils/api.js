@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -35,6 +36,11 @@ api.interceptors.response.use(
         isRedirecting = true;
         window.location.replace('/login');
       }
+    } else if (!error.response || error.code === 'ERR_NETWORK') {
+      // Global fallback message for API/Network failures instead of static mock data
+      toast.error('Data is not loading. Cannot connect to the server.', {
+        id: 'network-error', // Prevent duplicate toasts
+      });
     }
     return Promise.reject(error);
   }

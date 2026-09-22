@@ -12,18 +12,6 @@ const ProtectedLayout = () => {
   const [menus, setMenus] = useState([]);
   const [loadingMenus, setLoadingMenus] = useState(true);
 
-  // Default fallback menus for demo / overview when database is not connected
-  const defaultAdminMenus = [
-    { id: 8, menuName: 'Categories', listPageRoute: '/admin/categories', formPageRoute: '/admin/categories/new', icon: 'Tags', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-    { id: 2, menuName: 'Clinic Photos', listPageRoute: '/admin/clinic-photos', icon: 'Image', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-    { id: 3, menuName: 'Services', listPageRoute: '/admin/services', icon: 'Activity', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-    { id: 4, menuName: 'Health Conditions', listPageRoute: '/admin/health-conditions', icon: 'Stethoscope', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-    { id: 9, menuName: 'Patient Inquiries', listPageRoute: '/admin/inquiries', icon: 'Inbox', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-    { id: 5, menuName: 'Users Master', listPageRoute: '/admin/users', icon: 'Users', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-    { id: 6, menuName: 'User Types', listPageRoute: '/admin/user-types', icon: 'Shield', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-    { id: 7, menuName: 'Role Permissions', listPageRoute: '/admin/role-permission', icon: 'Key', userPermission: { isRead: 1, isWrite: 1, isEdit: 1, isDelete: 1 } },
-  ];
-
   useEffect(() => {
     const fetchMenus = async () => {
       try {
@@ -34,11 +22,11 @@ const ProtectedLayout = () => {
           );
           setMenus(filtered);
         } else {
-          setMenus(defaultAdminMenus);
+          setMenus([]);
         }
       } catch (error) {
-        console.warn('Backend unavailable, using default admin menus for overview:', error.message);
-        setMenus(defaultAdminMenus);
+        console.warn('Backend unavailable or failed to fetch menus:', error.message);
+        setMenus([]);
       } finally {
         setLoadingMenus(false);
       }

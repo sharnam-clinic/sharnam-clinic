@@ -4,12 +4,14 @@ import * as Icons from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
+import ConfirmModal from '../components/ConfirmModal';
 
 const ServiceList = () => {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryMap, setCategoryMap] = useState({});
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   // Extract permissions from ProtectedLayout outlet context
   const outlet = useOutletContext() || {};
@@ -69,20 +71,27 @@ const ServiceList = () => {
     loadCategories();
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
     if (!permissions.isDelete) {
       toast.error('You do not have permission to delete services.');
       return;
     }
-    if (window.confirm('Are you sure you want to delete this service?')) {
-      try {
-        await api.delete(`/services/${id}`);
-        toast.success('Service deleted successfully');
-        fetchServices();
-      } catch (err) {
-        console.error('Failed to delete service', err);
-        toast.error(err.response?.data?.message || 'Failed to delete service');
-      }
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/services/${id}`);
+      toast.success('Service deleted successfully');
+      fetchServices();
+    } catch (err) {
+      console.error('Failed to delete service', err);
+      toast.error(err.response?.data?.message || 'Failed to delete service');
+    } finally {
+      setDeleteModal({ isOpen: false, id: null });
     }
   };
 
@@ -154,7 +163,7 @@ const ServiceList = () => {
             )}
             {canDelete && (
               <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDeleteClick(row.id)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete Service"
               >
@@ -194,6 +203,15 @@ const ServiceList = () => {
         data={services}
         loading={loading}
         exportFileName="services_export"
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Service"
+        message="Are you sure you want to permanently delete this service? This action cannot be undone."
       />
     </div>
   );

@@ -4,12 +4,14 @@ import * as Icons from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import DataTable from '../components/DataTable';
+import ConfirmModal from '../components/ConfirmModal';
 
 const HealthConditionList = () => {
   const navigate = useNavigate();
   const [conditions, setConditions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryMap, setCategoryMap] = useState({});
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   // Extract permissions from ProtectedLayout outlet context
   const outlet = useOutletContext() || {};
@@ -69,20 +71,27 @@ const HealthConditionList = () => {
     loadCategories();
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
     if (!permissions.isDelete) {
       toast.error('You do not have permission to delete health conditions.');
       return;
     }
-    if (window.confirm('Are you sure you want to delete this health condition?')) {
-      try {
-        await api.delete(`/health-conditions/${id}`);
-        toast.success('Condition deleted successfully');
-        fetchConditions();
-      } catch (err) {
-        console.error('Failed to delete condition', err);
-        toast.error(err.response?.data?.message || 'Failed to delete condition');
-      }
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/health-conditions/${id}`);
+      toast.success('Condition deleted successfully');
+      fetchConditions();
+    } catch (err) {
+      console.error('Failed to delete condition', err);
+      toast.error(err.response?.data?.message || 'Failed to delete condition');
+    } finally {
+      setDeleteModal({ isOpen: false, id: null });
     }
   };
 
@@ -154,7 +163,7 @@ const HealthConditionList = () => {
             )}
             {canDelete && (
               <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDeleteClick(row.id)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete Condition"
               >
@@ -194,6 +203,15 @@ const HealthConditionList = () => {
         data={conditions}
         loading={loading}
         exportFileName="health_conditions_export"
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Health Condition"
+        message="Are you sure you want to permanently delete this condition? This action cannot be undone."
       />
     </div>
   );

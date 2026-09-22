@@ -35,6 +35,11 @@ exports.saveBulk = async (req, res) => {
       return sendError(res, 'Invalid userTypeId or permissions list', 400);
     }
 
+    const loggedInUserTypeId = req.user?.userTypeId ? Number(req.user.userTypeId) : 1;
+    if (Number(userTypeId) < loggedInUserTypeId) {
+      return sendError(res, 'You cannot modify permissions for a role higher than your own', 403);
+    }
+
     // Use a transaction to upsert all permissions
     const results = await prisma.$transaction(
       permissions.map((p) =>

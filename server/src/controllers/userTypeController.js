@@ -9,7 +9,12 @@ exports.getAll = async (req, res) => {
       orderBy: { id: 'asc' },
     });
 
-    const result = userTypes.map((ut) => ({
+    const loggedInUserTypeId = req.user?.userTypeId ? Number(req.user.userTypeId) : 1;
+
+    // Filter out user types that are "higher" (lower ID) than the logged in user
+    const filteredUserTypes = userTypes.filter(ut => Number(ut.id) >= loggedInUserTypeId);
+
+    const result = filteredUserTypes.map((ut) => ({
       id: Number(ut.id),
       userType: ut.user_type,
       isStatus: ut.is_status,
