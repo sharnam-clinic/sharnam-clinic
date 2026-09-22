@@ -82,7 +82,7 @@ const Sidebar = ({ isOpen, toggleSidebar, menus = [] }) => {
       >
         {/* Logo */}
         <div className="h-18 flex items-center justify-between px-5 border-b border-gray-100">
-          <Link to="/admin/categories" className="hover:opacity-90 transition-opacity flex items-center">
+          <Link to="/admin" className="hover:opacity-90 transition-opacity flex items-center">
             <ClinicLogo size="md" />
           </Link>
           <button

@@ -27,6 +27,8 @@ import ServicesPage from './pages/client/ServicesPage';
 import HealthInfoPage from './pages/client/HealthInfoPage';
 import ContactPage from './pages/client/ContactPage';
 
+import AdminDashboard from './pages/AdminDashboard';
+
 function App() {
   return (
     <BrowserRouter>
@@ -57,7 +59,7 @@ function App() {
         
         {/* Admin panel */}
         <Route path="/admin" element={<ProtectedLayout />}>
-          <Route index element={<Navigate to="/admin/categories" replace />} />
+          <Route index element={<AdminDashboard />} />
           
           {/* Dynamic Clinic Modules */}
           <Route path="categories" element={<CategoryList />} />
